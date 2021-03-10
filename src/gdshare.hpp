@@ -96,8 +96,16 @@ namespace gdshare {
          * Default export type
         */
         static constexpr const char* Default = GDShare2;
+
+        inline static std::unordered_map<int, const char*> typemap = {
+            { 0, GDShare2 },
+            { 1, GDShare },
+            { 2, LvlShare }
+        };
     }
 
     DS_Dictionary* parseFile(const std::string &);
     std::string decodeFile(const std::string &);
+
+    bool saveFile(const std::string &, const std::string &, const unsigned int &);
 }

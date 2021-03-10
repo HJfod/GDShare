@@ -35,6 +35,19 @@ static bool saveFileText(std::string _path, std::string _cont) {
     return false;
 }
 
+static bool saveFileBinary(std::string _path, std::vector<uint8_t> _bytes) {
+    std::ofstream file;
+    file.open(_path, std::ios::out | std::ios::binary);
+    if (file.is_open()) {
+        file.write(reinterpret_cast<char*>(_bytes.data()), _bytes.size());
+        file.close();
+
+        return true;
+    }
+    file.close();
+    return false;
+}
+
 static constexpr unsigned int h$(const char* str, int h = 0) {
     return !str[h] ? 5381 : (h$(str, h+1) * 33) ^ str[h];
 }
@@ -225,6 +238,7 @@ std::string gdshare::decodeFile(const std::string & _path) {
         return nullptr;
 
     std::string type = std::filesystem::path(_path).extension().string();
+
     // remove .
     type = type.substr(1);
 
@@ -250,7 +264,16 @@ std::string gdshare::decodeFile(const std::string & _path) {
             }
             zip_close(zip);
 
-            nlohmann::json metaj = nlohmann::json::parse((const char*)metaBuffer);
+            if (!dataBuffer) {
+                if (metaBuffer)
+                    free(metaBuffer);
+                
+                return nullptr;
+            }
+
+            nlohmann::json metaj;
+            if (metaBuffer)
+                metaj = nlohmann::json::parse((const char*)metaBuffer);
 
             free(metaBuffer);
 
@@ -307,5 +330,52 @@ DS_Dictionary* gdshare::parseFile(const std::string & _path) {
     }
 
     return nullptr;
+}
+
+bool gdshare::saveFile(const std::string & _path, const std::string & _data, const unsigned int & _type) {
+    switch (_type) {
+        case 0: {
+            nlohmann::json metajson = nlohmann::json::object({
+                { "compression", "none" }
+            });
+
+            std::string metadata = metajson.dump();
+
+            struct zip_t *zip = zip_open(_path.c_str(), ZIP_DEFAULT_COMPRESSION_LEVEL, 'w');
+            {
+                zip_entry_open(zip, "level.data");
+                {
+                    zip_entry_write(zip, _data.c_str(), strlen(_data.c_str()));
+                }
+                zip_entry_close(zip);
+
+                zip_entry_open(zip, "level.meta");
+                {
+                    zip_entry_write(zip, metadata.c_str(), strlen(metadata.c_str()));
+                }
+                zip_entry_close(zip);
+            }
+            zip_close(zip);
+
+            return true;
+        } break;
+        
+        case 1: {
+            return saveFileText(_path, _data);
+        } break;
+
+        case 2: {
+            std::string data = _data.substr(3, _data.length() - 7);
+
+            return saveFileBinary(
+                _path,
+                gdcrypto::zlib::deflateBuffer(
+                    gdshare::decoder::Convert(data)
+                )
+            );
+        } break;
+    }
+
+    return false;
 }
 
