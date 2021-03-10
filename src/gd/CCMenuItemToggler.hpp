@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../offsets.hpp"
+#include "../GDSM.hpp"
 
 class CCMenuItemToggler : public cocos2d::CCMenuItem {
     public:
@@ -108,6 +108,33 @@ class CCMenuItemToggler : public cocos2d::CCMenuItem {
             text->setPositionX(_pos.x + twidth / 2 + 20);
 
             _parent->addChild(text);
+
+            return toggle;
+        }
+
+        static CCMenuItemToggler* createWithText2(
+            cocos2d::CCMenu* _parent,
+            bool _is_toggled,
+            const char* _text,
+            float _scale,
+            cocos2d::SEL_MenuHandler _click
+        ) {
+            auto toggle = CCMenuItemToggler::createWithScale(
+                _parent,
+                _click,
+                _scale
+            );
+
+            toggle->toggle(_is_toggled);
+
+            auto text = cocos2d::CCLabelBMFont::create(_text, "bigFont.fnt");
+            text->setScale(.7f * _scale);
+            text->setPosition(
+                text->getScaledContentSize().width / 2 + toggle->getScaledContentSize().width + 5,
+                text->getScaledContentSize().height / 2 + 7
+            );
+
+            toggle->addChild(text);
 
             return toggle;
         }

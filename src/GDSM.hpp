@@ -10,7 +10,7 @@
 #endif
 
 #include "console.hpp"
-//#define GDCONSOLE
+#define GDCONSOLE
 
 #define __STR_CAT___(str1, str2) str1##str2
 #define __STR_CAT__(str1, str2) __STR_CAT___(str1, str2)

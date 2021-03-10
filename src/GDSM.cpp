@@ -2,8 +2,10 @@
 #include "gd/GJGameLevel.hpp"
 #include "gd/ButtonSprite.hpp"
 #include "gd/FLAlertLayer.hpp"
+#include "gd/CCMenuItemToggler.hpp"
 #include "gd/pugixml.hpp"
 #include "gdshare.hpp"
+#include <GUI/CCControlExtension/CCScale9Sprite.h>
 #include <fstream>
 #include <filesystem>
 
@@ -39,6 +41,184 @@ namespace GameLevelManager {
         return true;
     }
 }
+
+class OptionMenu : public cocos2d::CCMenu {
+    public:
+        void onSelect(cocos2d::CCObject* pSender) {
+            auto menu = reinterpret_cast<cocos2d::CCMenu*>(
+                reinterpret_cast<cocos2d::CCNode*>(pSender)->getUserData()
+            );
+
+            for (unsigned int i = 0; i < menu->getChildrenCount(); i++) {
+                auto t = getChild<CCMenuItemToggler*>(menu, i);
+
+                t->toggle(false);
+            }
+        }
+
+        static bool populate(
+            cocos2d::CCMenu* _menu,
+            std::vector<const char*> _opts,
+            cocos2d::CCPoint _pos = { 0, 0 },
+            float _scale = 1.0f
+        ) {
+            bool first = true;
+            for (auto opt : _opts) {
+                auto optSelect = CCMenuItemToggler::createWithText2(
+                    _menu,
+                    first,
+                    opt,
+                    _scale,
+                    (cocos2d::SEL_MenuHandler)&OptionMenu::onSelect 
+                );
+
+                optSelect->setUserData(_menu);
+
+                first = false;
+
+                _menu->addChild(optSelect);
+            }
+
+            _menu->alignItemsVerticallyWithPadding(4.0f);
+
+            return true;
+        }
+
+        static bool populate(
+            cocos2d::CCMenu* _menu,
+            std::vector<const char*> _opts,
+            float _scale = 1.0f
+        ) {
+            return populate(_menu, _opts, { 0, 0 }, _scale);
+        }
+
+        bool init(std::vector<const char*> _opts, float _scale) {
+            if (!cocos2d::CCMenu::init())
+                return false;
+            
+            return populate(this, _opts, _scale);
+        }
+
+        static OptionMenu* create(std::vector<const char*> _opts, float _scale = 1.0f) {
+            OptionMenu* menu = new OptionMenu();
+
+            if (menu && menu->init(_opts, _scale)) {
+                menu->setAnchorPoint({ 0, 0 });
+                menu->autorelease();
+                return menu;
+            }
+
+            CC_SAFE_DELETE(menu);
+            return nullptr;
+        }
+};
+
+class ExportSettingsLayer : public FLAlertLayer {
+    protected:
+        virtual bool init(GJGameLevel* _lvl) {
+            auto winSize = cocos2d::CCDirector::sharedDirector()->getWinSize();
+            auto lrSize  = cocos2d::CCSize { 320.0f, 220.0f };
+
+            if (!this->initWithColor({ 0, 0, 0, 75 })) return false;
+            this->m_pLayer = cocos2d::CCLayer::create();
+            this->addChild(this->m_pLayer);
+
+            auto bg = cocos2d::extension::CCScale9Sprite::create("GJ_square01.png", { 0.0f, 0.0f, 80.0f, 80.0f });
+            bg->setContentSize(lrSize);
+            bg->setPosition(winSize.width / 2, winSize.height / 2);
+            this->m_pLayer->addChild(bg);
+
+            this->m_pButtonMenu = cocos2d::CCMenu::create();
+            this->m_pLayer->addChild(this->m_pButtonMenu);
+
+
+
+            auto title = cocos2d::CCLabelBMFont::create(
+                ("Export " + _lvl->levelName).c_str(), "goldFont.fnt"
+            );
+            title->setScale(.8f);
+            title->setPosition(lrSize.width / 2, lrSize.height - 20);
+            bg->addChild(title);
+
+            auto targetText = cocos2d::CCLabelBMFont::create("Format:", "bigFont.fnt");
+            targetText->setScale(.5f);
+            targetText->setPosition(lrSize.width / 2, lrSize.height - 55);
+            bg->addChild(targetText);
+
+            int selected = 0;
+
+            auto o = OptionMenu::create(
+                { ".gmd2", ".gmd", ".lvl" },
+                .7f
+            );
+
+            o->setPosition(0, 0);
+
+            this->m_pButtonMenu->addChild(o, 150);
+
+            auto pathButton = CCMenuItemSpriteExtraGD::create(
+                ButtonSprite::create("Export", 0, 0, "bigFont.fnt", "GJ_button_01.png", 0.0f, .8f),
+                this->m_pButtonMenu,
+                nullptr
+            );
+
+            pathButton->setScale(.65f);
+            pathButton->setPositionY(-90);
+
+            this->m_pButtonMenu->addChild(pathButton);
+
+
+            auto closeBtn = CCMenuItemSpriteExtraGD::create(
+                cocos2d::CCSprite::createWithSpriteFrameName("GJ_closeBtn_001.png"),
+                this->m_pButtonMenu,
+                (cocos2d::SEL_MenuHandler)&ExportSettingsLayer::onClose
+            );
+            closeBtn->setUserData(reinterpret_cast<void*>(this));
+
+            this->m_pButtonMenu->addChild(closeBtn);
+
+            closeBtn->setPosition(
+                - lrSize.width / 2,
+                lrSize.height / 2
+            );
+
+            this->setKeypadEnabled(true);
+            this->setTouchEnabled(true);
+
+            return true;
+        };
+
+        void onClose(cocos2d::CCObject* pSender) {
+            auto layer = reinterpret_cast<ExportSettingsLayer*>(
+                reinterpret_cast<cocos2d::CCNode*>(pSender)->getUserData()
+            );
+
+            if (layer->callback_ != nullptr)
+                layer->callback_();
+
+            layer->setKeypadEnabled(false);
+            layer->removeFromParentAndCleanup(true);
+        };
+
+        std::function<bool()> callback_;
+
+    public:
+        static ExportSettingsLayer* create(
+            GJGameLevel* _name,
+            std::function<bool()> _cb = nullptr
+        ) {
+            auto pRet = new ExportSettingsLayer();
+
+            if (pRet && pRet->init(_name)) {
+                pRet->callback_ = _cb;
+                pRet->autorelease();
+                return pRet;
+            }
+
+            CC_SAFE_DELETE(pRet);
+            return nullptr;
+        };
+};
 
 class dumbass_xml {
     std::string* the_fucking_data;
@@ -201,6 +381,14 @@ class EditLevelLayer : public cocos2d::CCLayer {
     }
     
     void exportLevel(cocos2d::CCObject* pSender) {
+        auto lvl = reinterpret_cast<GJGameLevel*>(
+            reinterpret_cast<cocos2d::CCNode*>(pSender)->getUserData()
+        );
+        
+        ExportSettingsLayer::create(
+            lvl
+        )->show();
+        /*
         nfdchar_t* path = nullptr;
         const nfdchar_t* filter = "gmd"; // "gmd2,gmd,lvl;gmd"
         nfdresult_t res = NFD_SaveDialog(filter, nullptr, &path);
@@ -274,7 +462,8 @@ class EditLevelLayer : public cocos2d::CCLayer {
                 )->show();
 
             free(path);
-        }
+
+            //*/
     }
 
     public:
@@ -341,8 +530,6 @@ class LevelBrowserLayer {
                             song = "",
                             songCustom = "";
 
-                auto speed = std::chrono::high_resolution_clock::now();
-
                 auto d = new dumbass_xml(&lvl);
 
                 d->try_to_find_this_fucker_pls("k2", &name);
@@ -356,9 +543,6 @@ class LevelBrowserLayer {
                 d->ok_now_gtfo();
 
                 delete d;   // haha get fucked
-
-                std::cout << "done in " << std::chrono::duration_cast<std::chrono::milliseconds>(
-                    std::chrono::high_resolution_clock::now() - speed).count() << "ms\n";
 
                 if (data.starts_with("H4sIAAAAAAA"))
                     data = gdshare::decoder::GZip(
