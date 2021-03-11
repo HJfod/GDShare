@@ -22,7 +22,7 @@ static std::string readFileString(const std::string & _path) {
     return "";
 }
 
-static bool saveFileText(std::string _path, std::string _cont) {
+static bool saveFileText(const std::string & _path, const std::string & _cont) {
     std::ofstream file;
     file.open(_path);
     if (file.is_open()) {
@@ -35,7 +35,7 @@ static bool saveFileText(std::string _path, std::string _cont) {
     return false;
 }
 
-static bool saveFileBinary(std::string _path, std::vector<uint8_t> _bytes) {
+static bool saveFileBinary(const std::string & _path, std::vector<uint8_t> _bytes) {
     std::ofstream file;
     file.open(_path, std::ios::out | std::ios::binary);
     if (file.is_open()) {
@@ -52,7 +52,7 @@ static constexpr unsigned int h$(const char* str, int h = 0) {
     return !str[h] ? 5381 : (h$(str, h+1) * 33) ^ str[h];
 }
 
-static std::string sanitizeString(std::string _text, bool _actually_do_it = true) {
+static std::string sanitizeString(const std::string & _text, bool _actually_do_it = true) {
     if (_actually_do_it) {
         std::string s = _text;
         std::transform(s.begin(), s.end(), s.begin(),
@@ -235,10 +235,12 @@ std::vector<uint8_t> gdshare::encoder::XOR(const std::vector<uint8_t> & _data, i
 
 std::string gdshare::decodeFile(const std::string & _path) {
     if (!std::filesystem::exists(_path))
-        return nullptr;
+        return "";
 
     std::string type = std::filesystem::path(_path).extension().string();
 
+    if (!type.length())
+        return "";
     // remove .
     type = type.substr(1);
 
@@ -249,14 +251,27 @@ std::string gdshare::decodeFile(const std::string & _path) {
             size_t metaBufSize, dataBufSize;
 
             struct zip_t *zip = zip_open(_path.c_str(), 0, 'r');
+
+            if (zip == nullptr)
+                return "";
+
             {
-                zip_entry_open(zip, "level.meta");
+                if (zip_entry_open(zip, "level.meta") != 0) {
+                    zip_close(zip);
+                    return "";
+                }
+
                 {
                     zip_entry_read(zip, &metaBuffer, &metaBufSize);
                 }
+
                 zip_entry_close(zip);
 
-                zip_entry_open(zip, "level.data");
+                if (zip_entry_open(zip, "level.data") != 0) {
+                    zip_close(zip);
+                    return "";
+                }
+
                 {
                     zip_entry_read(zip, &dataBuffer, &dataBufSize);
                 }
@@ -268,18 +283,18 @@ std::string gdshare::decodeFile(const std::string & _path) {
                 if (metaBuffer)
                     free(metaBuffer);
                 
-                return nullptr;
+                return "";
             }
 
             nlohmann::json metaj;
             if (metaBuffer)
-                metaj = nlohmann::json::parse((const char*)metaBuffer);
+                metaj = nlohmann::json::parse(reinterpret_cast<const char*>(metaBuffer));
 
             free(metaBuffer);
 
             std::string compr = metaj["compression"];
-
-            std::string data = (const char*)dataBuffer;
+            
+            std::string data = reinterpret_cast<const char*>(dataBuffer);
 
             free(dataBuffer);
 
@@ -288,7 +303,7 @@ std::string gdshare::decodeFile(const std::string & _path) {
             data = decodeCompression(data, compr);
 
             if (data == "")
-                return nullptr;
+                return "";
 
             return data;
         } break;
@@ -302,6 +317,9 @@ std::string gdshare::decodeFile(const std::string & _path) {
         case h$(gdshare::filetypes::LvlShare): {
             std::string datac = readFileString(_path);
 
+            if (!datac.length())
+                return "";
+            
             std::string data = gdshare::decoder::GZip(datac);
 
             data = "<d>" + data + "</d>";
@@ -310,10 +328,10 @@ std::string gdshare::decodeFile(const std::string & _path) {
         } break;
 
         default:
-            return nullptr;
+            return "";
     }
 
-    return nullptr;
+    return "";
 }
 
 DS_Dictionary* gdshare::parseFile(const std::string & _path) {

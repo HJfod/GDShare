@@ -14,6 +14,9 @@
 // for SHOpenFolderAndSelectItems
 #include <Shlobj.h>
 
+static constexpr const char* allowedPathChars =
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/\\.:-_,;'=%&";
+
 static std::string workdir() {
     char buff[FILENAME_MAX];
     _getcwd(buff, FILENAME_MAX);
@@ -215,9 +218,13 @@ class ExportSettingsLayer : public FLAlertLayer {
 
             auto lvl = std::get<0>(*tuple);
 
-            if (std::filesystem::exists(outputPath))
-                if (std::filesystem::is_directory(outputPath)) {
-                    outputPath += "\\" + lvl->levelName + "." +
+            // making a copy cuz we don't want to add
+            // the filename to outputPath
+            std::string path = outputPath;
+
+            if (std::filesystem::exists(path))
+                if (std::filesystem::is_directory(path)) {
+                    path += "\\" + lvl->levelName + "." +
                         gdshare::filetypes::typemap[selectedFormat];
                 }
             
@@ -272,13 +279,13 @@ class ExportSettingsLayer : public FLAlertLayer {
                 << "</d>";
             }
 
-            if (gdshare::saveFile(outputPath, data.str(), selectedFormat))
+            if (gdshare::saveFile(path, data.str(), selectedFormat))
                 FLAlertLayer::create(
-                    new ExportSuccessDialog(outputPath.c_str()),
+                    new ExportSuccessDialog(path.c_str()),
                     "Exported",
                     "OK", "Show file",
                     280.0,
-                    "Succesfully <cl>exported</c> to <cy>" + outputPath + "</c>!"
+                    "Succesfully <cl>exported</c> to <cy>" + path + "</c>!"
                 )->show();
             
             else
@@ -415,7 +422,7 @@ class ExportSettingsLayer : public FLAlertLayer {
 
             pathInput->setLabelPlaceholderColor({ 120, 180, 255 });
             pathInput->setLabelPlaceholerScale(.8f);
-            pathInput->setAllowedChars("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/\\.:-_,;'=%&");
+            pathInput->setAllowedChars(allowedPathChars);
             pathInput->setPositionY(-40);
 
             this->m_pButtonMenu->addChild(pathInput);
@@ -689,26 +696,30 @@ class EditLevelLayer : public cocos2d::CCLayer {
         }
 };
 
-class MyLevelsLayer : public cocos2d::CCLayer {
-    static inline bool (__thiscall* init)(cocos2d::CCLayer*);
-    static bool __fastcall initHook(cocos2d::CCLayer* _self) {
-        auto res = init(_self);
+class LevelBrowserLayer : public cocos2d::CCLayer {
+    static inline bool (__thiscall* init)(cocos2d::CCLayer*, uintptr_t);
+    static bool __fastcall initHook(cocos2d::CCLayer* _self, void*, uintptr_t _array_probs) {
+        auto res = init(_self, _array_probs);
 
-        cocos2d::CCMenu* btnMenu = getChild<cocos2d::CCMenu*>(
-            _self, 8
-        );
+        unsigned int screen_id = *reinterpret_cast<uintptr_t*>(_array_probs + 0xEC);
 
-        auto importButton = CCMenuItemSpriteExtraGD::create(
-            cocos2d::CCSprite::create("BE_Import_File.png"),
-            btnMenu,
-            (cocos2d::SEL_MenuHandler)&MyLevelsLayer::importLevel
-        );
+        if (screen_id == 0x62) {
+            cocos2d::CCMenu* btnMenu = getChild<cocos2d::CCMenu*>(
+                _self, 8
+            );
 
-        cocos2d::CCNode* newBtn = getChild<cocos2d::CCNode*>(btnMenu, 0);
+            auto importButton = CCMenuItemSpriteExtraGD::create(
+                cocos2d::CCSprite::create("BE_Import_File.png"),
+                btnMenu,
+                (cocos2d::SEL_MenuHandler)&LevelBrowserLayer::importLevel
+            );
 
-        btnMenu->addChild(importButton);
+            cocos2d::CCNode* newBtn = getChild<cocos2d::CCNode*>(btnMenu, 0);
 
-        importButton->setPosition(newBtn->getPositionX(), newBtn->getPositionY() + 60.0f);
+            btnMenu->addChild(importButton);
+
+            importButton->setPosition(newBtn->getPositionX(), newBtn->getPositionY() + 60.0f);
+        }
 
         return res;
     }
@@ -765,9 +776,7 @@ class MyLevelsLayer : public cocos2d::CCLayer {
 
                 auto scene = cocos2d::CCScene::create();
 
-                //auto layer = EditLevelLayer::create(addedLevel);
-
-                auto layer = MyLevelsLayer::create();
+                auto layer = EditLevelLayer::create(addedLevel);
 
                 scene->addChild(layer);
 
@@ -788,17 +797,11 @@ class MyLevelsLayer : public cocos2d::CCLayer {
     }
 
     public:
-        static MyLevelsLayer* __stdcall create() {
-            return reinterpret_cast<MyLevelsLayer*(__stdcall*)()>(
-                base + 0x1977c0
-            )();
-        }
-
         static MH_STATUS load() {
             return MH_CreateHook(
-                (PVOID)(base + 0x1978a0),
-                (LPVOID)MyLevelsLayer::initHook,
-                (LPVOID*)&MyLevelsLayer::init
+                (PVOID)(base + 0x15a040),
+                (LPVOID)LevelBrowserLayer::initHook,
+                (LPVOID*)&LevelBrowserLayer::init
             );
         }
 };
@@ -817,7 +820,7 @@ bool GDShare::live::init() {
     if ((s = EditLevelLayer::load()) != MH_OK)
         return false;
 
-    if ((s = MyLevelsLayer::load()) != MH_OK)
+    if ((s = LevelBrowserLayer::load()) != MH_OK)
         return false;
 
     return MH_EnableHook(MH_ALL_HOOKS) == MH_OK;
