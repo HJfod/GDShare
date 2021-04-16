@@ -10,7 +10,7 @@
 #include <process.h>
 #include <filesystem>
 
-const char* AppName = "ModLdr Installer";
+const char* AppName = "Installer";
 const char* DataFile = ".gmdpath";
 DWORD GD_PID = 0;
 
@@ -154,21 +154,15 @@ enum err {
     CANT_OPEN_GD
 };
 
-// these are the files the runner moves
-// the first one in this array is the one
-// that gets injected
-
-// by default files are moved to the 
-// Geometry Dash folder
-
-// add a | and then a folder name to move the
-// file in a different folder relative to
-// the GD folder e.g. resources
-
-const char* req_files[3] = {
+const char* req_files[8] = {
     "GDShare.dll",
-    "resources/BE_Export_File.png|resources",
-    "resources/BE_Import_File.png|resources"
+    "BE_Import_File.png",
+    "BE_Import_File-hd.png",
+    "BE_Import_File-uhd.png",
+    "BE_Export_File.png",
+    "BE_Export_File-hd.png",
+    "BE_Export_File-uhd.png",
+    "gdshare_very_important_export_sound_effect.mp3|Resources"
 };
 
 int throwErr(std::string _msg, int _err) {

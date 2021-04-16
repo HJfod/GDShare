@@ -7,6 +7,11 @@ setlocal
 call :setESC
 
 set PROJECT_NAME=GDShare
+<<<<<<< HEAD
+=======
+set COMPILE_RUNNER=0
+set CONFIG=RelWithDebInfo
+>>>>>>> 3811f8a (lol did i not commit anything)
 
 if not exist submodules\ (
     git submodule update
@@ -17,10 +22,16 @@ if "%1"=="run" (
     goto run
 )
 
+if "%1"=="cr" (
+    set COMPILE_RUNNER=1
+)
+
 if "%1"=="re" (
     if exist build\ (
         rmdir /s /q build
     )
+
+    set COMPILE_RUNNER=1
     
     mkdir build
 ) else (
@@ -33,29 +44,30 @@ cd build
 
 echo %ESC%[93m • Generating project...%ESC%[0m
 
-del Release\%PROJECT_NAME%.dll
-del Release\OneTimeRunner.exe
+del %CONFIG%\%PROJECT_NAME%.dll
 
-cmake .. -A Win32 -Thost=x86
+if %COMPILE_RUNNER%==1 (
+    del %CONFIG%\OneTimeRunner.exe
+
+    cmake .. -A Win32 -Thost=x86 -DCOMPILE_RUNNER=True
+) else (
+    cmake .. -A Win32 -Thost=x86
+)
 
 echo.
 echo %ESC%[92m • Compiling library...%ESC%[0m
 
-msbuild %PROJECT_NAME%.sln /p:Configuration=Release /verbosity:minimal /p:PlatformTarget=x86
+msbuild %PROJECT_NAME%.sln /p:Configuration=%CONFIG% /verbosity:minimal /p:PlatformTarget=x86
 
-rem clang++ ../runner.cpp -std=c++20 -o Release/OneTimeRunner.exe -lWtsApi32 -luser32 -DNOMSGBOX
-
-if not exist Release\%PROJECT_NAME%.dll (
+if not exist %CONFIG%\%PROJECT_NAME%.dll (
     rem fuck you
     echo %ESC%[91m • somwin went fuwcy wuwcy.... so sowwy.qwq... wil fix soon promis ^>w^<%ESC%[0m
     goto done
 )
 
-robocopy ..\resources Release\resources /e /njh /njs /ndl /nc /njs
-
 :run
 
-if exist Release\OneTimeRunner.exe (
+if exist %CONFIG%\OneTimeRunner.exe (
     echo ✔️  Runner compiled
 ) else (
     rem fuck you
@@ -66,7 +78,7 @@ if exist Release\OneTimeRunner.exe (
 echo.
 echo %ESC%[94m • Running...%ESC%[0m
 
-cd Release
+cd %CONFIG%
 
 OneTimeRunner.exe
 
