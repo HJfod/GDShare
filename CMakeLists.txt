@@ -4,18 +4,17 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(PROJECT_NAME GDShare)
 set(RUNNER_NAME  OneTimeRunner)
+# stop zipper from compiling test
+set(BUILD_TEST Off CACHE BOOL "Build the test program." FORCE)
 
 project(${PROJECT_NAME} VERSION 1.0.0)
 
 file(GLOB_RECURSE SOURCES 
-    main.cpp
+    dllmain.cpp
     src/*.cpp
     submodules/nfd/src/nfd_win.cpp
     submodules/nfd/src/nfd_common.c
-    src/ext/ZlibHelper.cpp
-    src/ext/zip.cpp
 )
-
 set_source_files_properties(submodules/nfd/src/nfd_common.c PROPERTIES LANGUAGE CXX)
 
 set(WIN32 ON)
@@ -26,36 +25,45 @@ set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "")
 add_subdirectory(submodules/MinHook)
 target_link_libraries(${PROJECT_NAME} submodules/MinHook/Release/minhook.x32)
 
+add_subdirectory(submodules/zipper)
+target_link_libraries(${PROJECT_NAME} submodules/zipper/Release/staticZipper)
+
 target_include_directories(
     ${PROJECT_NAME} PRIVATE
-    submodules/Cappuccino/template/default-cpp/cappuccino-sdk/incl/cocos2dx
-    submodules/Cappuccino/template/default-cpp/cappuccino-sdk/incl/cocos2dx/include
-    submodules/Cappuccino/template/default-cpp/cappuccino-sdk/incl/cocos2dx/kazmath/include
-    submodules/Cappuccino/template/default-cpp/cappuccino-sdk/incl/cocos2dx/platform/third_party/win32/OGLES
-    submodules/Cappuccino/template/default-cpp/cappuccino-sdk/incl/cocos2dx/platform/third_party/win32/zlib
-    submodules/Cappuccino/template/default-cpp/cappuccino-sdk/incl/cocos2dx/platform/win32
-    submodules/Cappuccino/template/default-cpp/cappuccino-sdk/incl/extensions
+    submodules/cocos2dx
+    submodules/cocos2dx/include
+    submodules/cocos2dx/kazmath/include
+    submodules/cocos2dx/platform/third_party/win32/OGLES
+    submodules/cocos2dx/platform/win32
+    submodules/extensions
     submodules/MinHook/include
+    submodules/gd/include
+    submodules/gd
     submodules/nfd/src/include
+    submodules/zipper/zipper
 )
 
 target_link_libraries(
     ${PROJECT_NAME}
-    ${CMAKE_SOURCE_DIR}/libcocos2d.lib
-    ${CMAKE_SOURCE_DIR}/submodules/Cappuccino/template/default-cpp/cappuccino-sdk/lib/cappuccino.lib
-    ${CMAKE_SOURCE_DIR}/submodules/Cappuccino/template/default-cpp/cappuccino-sdk/lib/libExtensions.lib
+    ${CMAKE_SOURCE_DIR}/submodules/cocos2dx/libcocos2d.lib
+#   ${CMAKE_SOURCE_DIR}/submodules/cocos2dx/pugixml.lib
+    ${CMAKE_SOURCE_DIR}/submodules/extensions/libExtensions.lib
 )
 
 
 # runner
 
-add_executable(${RUNNER_NAME} runner.cpp)
+if (COMPILE_RUNNER)
 
-set_source_files_properties( runner.cpp PROPERTIES LANGUAGE CXX )
-set_source_files_properties( runner.cpp PROPERTIES CXX_STANDARD 17 )
-set_source_files_properties( runner.cpp PROPERTIES CXX_STANDARD_REQUIRED ON )
+    add_executable(${RUNNER_NAME} runner.cpp)
 
-target_link_libraries(${RUNNER_NAME} WtsApi32)
+    set_source_files_properties( runner.cpp PROPERTIES LANGUAGE CXX )
+    set_source_files_properties( runner.cpp PROPERTIES CXX_STANDARD 17 )
+    set_source_files_properties( runner.cpp PROPERTIES CXX_STANDARD_REQUIRED ON )
 
-add_definitions(${PROJECT_SOURCE_DIR}/runner.cpp "-DNOMSGBOX")
+    target_link_libraries(${RUNNER_NAME} WtsApi32)
+
+    add_definitions(${PROJECT_SOURCE_DIR}/runner.cpp "-DNOMSGBOX")
+
+endif()
 

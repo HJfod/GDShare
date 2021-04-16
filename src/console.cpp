@@ -1,8 +1,10 @@
 #include "console.hpp"
 #include <Windows.h>
 #include <stdio.h>
+#include <iostream>
+#include <string>
 
-bool ModLdr::console::load() {
+bool gd::console::load() {
     if (AllocConsole() == 0)
         return false;
 
@@ -14,10 +16,18 @@ bool ModLdr::console::load() {
     return true;
 }
 
-void ModLdr::console::unload() {
+void gd::console::unload() {
     fclose(stdin);
     fclose(stdout);
     fclose(stderr);
     FreeConsole();
+}
+
+void gd::console::awaitUnload() {
+    std::string inp;
+    getline(std::cin, inp);
+
+    if (inp != "e")
+        awaitUnload();
 }
 

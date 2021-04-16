@@ -1,9 +1,10 @@
 #pragma once
 
-namespace ModLdr {
+namespace gd {
     namespace console {
         bool load();
         void unload();
+        void awaitUnload();
     }
 }
 
