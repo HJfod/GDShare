@@ -1,12 +1,3 @@
-<<<<<<< HEAD
-# this is wip
-
-Currently the mod is in an usable state, but it may (and likely) does contain bugs that need to be ironed out. If you find issues, please let me know!
-
-# known bugs
-
- * deleting a level right after importing it crashes the game
-=======
 # Integrated GDShare
 
 This is a mod for GD that adds buttons to export / import levels.
@@ -46,4 +37,3 @@ This is a mod for GD that adds buttons to export / import levels.
  * [zmx](https://github.com/kyurime)
  * And everyone else in [GDP](https://discord.gg/jEwtDBK)
 
->>>>>>> 9c01dd7 (yay)
