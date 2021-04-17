@@ -154,15 +154,14 @@ enum err {
     CANT_OPEN_GD
 };
 
-const char* req_files[8] = {
+const char* req_files[7] = {
     "GDShare.dll",
-    "BE_Import_File.png",
-    "BE_Import_File-hd.png",
-    "BE_Import_File-uhd.png",
-    "BE_Export_File.png",
-    "BE_Export_File-hd.png",
-    "BE_Export_File-uhd.png",
-    "gdshare_very_important_export_sound_effect.mp3|Resources"
+    "resources\\BE_Import_File.png|Resources",
+    "resources\\BE_Import_File-hd.png|Resources",
+    "resources\\BE_Import_File-uhd.png|Resources",
+    "resources\\BE_Export_File.png|Resources",
+    "resources\\BE_Export_File-hd.png|Resources",
+    "resources\\BE_Export_File-uhd.png|Resources"
 };
 
 int throwErr(std::string _msg, int _err) {

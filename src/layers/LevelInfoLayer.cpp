@@ -6,7 +6,14 @@ bool __fastcall LevelInfoLayer::initHook(LevelInfoLayer* _self, uintptr_t, gd::G
         return false;
 
     auto menu = getChild<cocos2d::CCMenu*>(_self, 2);
-    auto copyBtn = getChild<gd::CCMenuItemSpriteExtra*>(menu, menu->getChildrenCount() - 1);
+
+    gd::CCMenuItemSpriteExtra* targBtn = nullptr;
+    auto chix = menu->getChildrenCount();
+    while (getChild<gd::CCMenuItemSpriteExtra*>(menu, --chix)->getPositionX() < 0) {
+        targBtn = getChild<gd::CCMenuItemSpriteExtra*>(menu, chix );
+
+        if (chix == 0) break;
+    }
 
     auto exportButton = gd::CCMenuItemSpriteExtra::create(
         cocos2d::CCSprite::create("BE_Export_File.png"),
@@ -16,8 +23,8 @@ bool __fastcall LevelInfoLayer::initHook(LevelInfoLayer* _self, uintptr_t, gd::G
     exportButton->setUserData(_lvl);
 
     exportButton->setPosition(
-        copyBtn->getPositionX(),
-        copyBtn->getPositionY() - 55.0f
+        targBtn->getPositionX(),
+        targBtn->getPositionY() + 55.0f
     );
 
     menu->addChild(exportButton);

@@ -7,11 +7,8 @@ setlocal
 call :setESC
 
 set PROJECT_NAME=GDShare
-<<<<<<< HEAD
-=======
 set COMPILE_RUNNER=0
 set CONFIG=RelWithDebInfo
->>>>>>> 3811f8a (lol did i not commit anything)
 
 if not exist submodules\ (
     git submodule update
@@ -64,6 +61,8 @@ if not exist %CONFIG%\%PROJECT_NAME%.dll (
     echo %ESC%[91m • somwin went fuwcy wuwcy.... so sowwy.qwq... wil fix soon promis ^>w^<%ESC%[0m
     goto done
 )
+
+robocopy ..\resources %CONFIG%\resources /MIR
 
 :run
 

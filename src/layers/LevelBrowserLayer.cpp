@@ -1,7 +1,6 @@
 #include "LevelBrowserLayer.hpp"
 #include "../utils/gdshare.hpp"
 #include "../utils/helpers.hpp"
-#include "../gd/GameLevelManager.hpp"
 
 void LevelBrowserLayer::importLevel(std::string const& _fname) {
     auto lvl = gdshare::loadLevelFromFile(_fname);
@@ -12,7 +11,7 @@ void LevelBrowserLayer::importLevel(std::string const& _fname) {
         auto parseRes = doc.Parse(lvl.data.c_str());
 
         if (parseRes == tinyxml2::XMLError::XML_NO_ERROR) {
-            auto addedLevel = GameLevelManager::createNewLevel();
+            auto addedLevel = gd::GameLevelManager::createNewLevel();
 
             addedLevel->levelName = "Unknown";
 
@@ -94,7 +93,13 @@ void LevelBrowserLayer::importLevel(std::string const& _fname) {
             // life-changing line of code.
             // never delete under threat of torture.
             // by cos8o.
-            gd::GameSoundManager::playSound("gdshare_very_important_export_sound_effect.mp3");
+
+            // unfortunately it also does not improve the
+            // user experience so i have to comment it out.
+
+            // RIP
+
+            // gd::GameSoundManager::playSound("gdshare_very_important_export_sound_effect.mp3");
         }
     } else
         gd::FLAlertLayer::create(
