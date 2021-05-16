@@ -20,6 +20,14 @@ static std::string readFileString(const std::string & _path) {
     return "";
 }
 
+[[nodiscard]]
+static std::vector<uint8_t> readFileBinary(const std::string & _path) {
+    std::ifstream in(_path, std::ios::in | std::ios::binary);
+    if (in)
+        return std::vector<uint8_t> ( std::istreambuf_iterator<char>(in), {});
+    return {};
+}
+
 static bool saveFileText(const std::string & _path, const std::string & _cont) {
     std::ofstream file;
     file.open(_path);
@@ -33,11 +41,11 @@ static bool saveFileText(const std::string & _path, const std::string & _cont) {
     return false;
 }
 
-static bool saveFileBinary(const std::string & _path, std::vector<uint8_t> _bytes) {
+static bool saveFileBinary(const std::string & _path, std::vector<uint8_t> const& _bytes) {
     std::ofstream file;
     file.open(_path, std::ios::out | std::ios::binary);
     if (file.is_open()) {
-        file.write(reinterpret_cast<char*>(_bytes.data()), _bytes.size());
+        file.write(reinterpret_cast<const char*>(_bytes.data()), _bytes.size());
         file.close();
 
         return true;

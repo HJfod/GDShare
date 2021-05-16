@@ -81,16 +81,36 @@ std::vector<uint8_t> gdshare::encoder::XOR(const std::vector<uint8_t> & _data, i
     return gdshare::decoder::XORX(_data, _key);
 }
 
+void gdshare::removeNullbytesFromString(std::string & str) {
+    // fix for XML Parse Error 10
+    for (auto i = 0u; i < str.size(); i++)
+        if (!str.at(i))
+            str.at(i) = 32;
+}
 
-
-bool gdshare::saveFileFormat(std::string const& _path, std::string const& _data, ExportFormat const& _type) {
+bool gdshare::saveFileFormat(
+    std::string const& _path,
+    std::string const& _data,
+    ExportFormat const& _type,
+    std::string const& _songpath,
+    bool _customsong
+) {
     switch (_type) {
         case ExportFormat::gmd2: {
             nlohmann::json metajson = nlohmann::json::object({
                 { "compression", "none" }
             });
 
+            if (_songpath.size()) {
+                metajson["song-file"] = std::filesystem::path(_songpath).filename().string();
+                metajson["song-is-custom"] = _customsong;
+            }
+
             std::string metadata = metajson.dump();
+
+            if (std::filesystem::exists(_path))
+                if (!std::filesystem::remove(_path))
+                    return false;
 
             zipper::Zipper zip (_path);
 
@@ -99,6 +119,9 @@ bool gdshare::saveFileFormat(std::string const& _path, std::string const& _data,
 
             zip.add(dataStream, "level.data");
             zip.add(metaStream, "level.meta");
+
+            if (_songpath.size())
+                zip.add(_songpath);
 
             zip.close();
 
@@ -124,7 +147,15 @@ bool gdshare::saveFileFormat(std::string const& _path, std::string const& _data,
     return false;
 }
 
-bool gdshare::exportLevel(gd::GJGameLevel* const& _lvl, std::string const& _path, ExportFormat const& _type) {
+std::string gdshare::exportLevel(
+    gd::GJGameLevel* const& _lvl,
+    std::string const& _path,
+    ExportFormat _type,
+    int _flags
+) {
+    if (!_lvl->levelString.size())
+        return "Level string is empty!";
+
     std::string song;
 
     if (_lvl->songID)
@@ -170,12 +201,29 @@ bool gdshare::exportLevel(gd::GJGameLevel* const& _lvl, std::string const& _path
         << "</d>";
     }
     
-    return gdshare::saveFileFormat(_path, data.str(), _type);
+    std::string songFilePath = "";
+    if (_flags & ExportFlags::EF_IncludeSong)
+        songFilePath = _lvl->getAudioFileName();
+    
+    auto dataStr = data.str();
+
+    removeNullbytesFromString(dataStr);
+
+    if (!gdshare::saveFileFormat(_path, dataStr, _type, songFilePath, _lvl->songID))
+        return "Unable to save file!\n";
+    
+    return "";
 }
 
-gdshare::Result<std::string> gdshare::loadLevelFromFile(std::string const& _path) {
+gdshare::Result<std::string> gdshare::loadLevelFromFile(
+    std::string const& _path,
+    std::vector<uint8_t> * _song,
+    std::string * _songpath
+) {
     if (!std::filesystem::exists(_path))
-        return { false, "File does not exist!" };
+        return { false, "File does not exist! (Likely reason is that the path or "
+                        "filename contains <co>unrecognized</c> characters; <cy>Move</c> "
+                        "the file to a different location and try again)" };
 
     std::string type = std::filesystem::path(_path).extension().string();
 
@@ -203,14 +251,42 @@ gdshare::Result<std::string> gdshare::loadLevelFromFile(std::string const& _path
             std::string metadata = gdshare::decoder::Convert(metaBuffer);
             std::string data = gdshare::decoder::Convert(dataBuffer);
 
-            zip.close();
-
             nlohmann::json metaj;
             try {
                 metaj = nlohmann::json::parse(metadata);
             } catch (...) {
+                zip.close();
+
                 return { false, "Unable to parse metadata!" };
             }
+
+            std::string songfile = metaj["song-file"];
+
+            if (songfile.size()) {
+                if (_song) {
+                    if (!zip.extractEntryToMemory(songfile, *_song))
+                        goto skip_song_file;
+
+                    std::string targetPath;
+                    if (metaj["song-is-custom"]) {
+                        try {
+                            targetPath = gd::MusicDownloadManager::pathForSong(
+                                std::stoi(songfile.substr(0, songfile.find_first_of(".")))
+                            );
+                        } catch (...) {
+                            goto skip_song_file;
+                        }
+                    } else
+                        // official songs are always in resources
+                        targetPath = "Resources/" + songfile;
+
+                    if (_songpath)
+                        *_songpath = targetPath;
+                }
+            }
+        skip_song_file:
+
+            zip.close();
             
             std::string compr = metaj["compression"];
 
@@ -247,7 +323,7 @@ gdshare::Result<std::string> gdshare::loadLevelFromFile(std::string const& _path
         } break;
 
         default:
-            return { false, "Unnkown file type" };
+            return { false, "Unknown file type" };
     }
 
     return { false, "How did you even manage to get this error" };

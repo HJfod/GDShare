@@ -3,6 +3,7 @@
 #include "../offsets.hpp"
 #include "../nodes/BrownAlertDelegate.hpp"
 #include "../nodes/HorizontalSelectMenu.hpp"
+#include "../nodes/BGCheckbox.hpp"
 #include "../nodes/InputNode.hpp"
 
 class ExportResultHandler : public gd::FLAlertLayerProtocol {
@@ -20,6 +21,7 @@ class ExportSettingsLayer : public BrownAlertDelegate {
         gd::GJGameLevel* m_pLevel;
         HorizontalSelectMenu* m_pHorizontalMenu;
         InputNode* m_pPathInput;
+        BGCheckbox* m_pIncludeSong;
 
         void setup() override;
 

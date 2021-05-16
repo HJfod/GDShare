@@ -85,9 +85,15 @@ namespace gdshare {
         std::string Convert(const std::vector<uint8_t> & vector);
     };
 
-    bool saveFileFormat(std::string const&, std::string const&, ExportFormat const&);
-    bool exportLevel(gd::GJGameLevel* const&, std::string const&, ExportFormat const&);
-    Result<std::string> loadLevelFromFile(std::string const&);
+    const enum ExportFlags {
+        EF_None             = 0b0000000,
+        EF_IncludeSong      = 0b0000001,
+    };
+
+    bool saveFileFormat(std::string const&, std::string const&, ExportFormat const&, std::string const& = "", bool = false);
+    std::string exportLevel(gd::GJGameLevel* const&, std::string const&, ExportFormat, int = ExportFlags::EF_None);
+    Result<std::string> loadLevelFromFile(std::string const&, std::vector<uint8_t>* = nullptr, std::string * = nullptr);
+    void removeNullbytesFromString(std::string &);
 
     inline constexpr const char* getExportTypeString(ExportFormat const& _type) {
         switch (_type) {

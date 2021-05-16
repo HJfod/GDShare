@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../offsets.hpp"
-#include "GJSearchObject.hpp"
 
 class LevelBrowserLayer : public cocos2d::CCLayer {
     protected:

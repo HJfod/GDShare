@@ -4,7 +4,10 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${vcpkgRoot}/x86-windows/include"
+                "${vcpkgRoot}/x86-windows/include",
+                "K:\\GDShare-mod-not-shitty\\submodules\\cocos2dx\\platform\\win32",
+                "K:\\GDShare-mod-not-shitty\\submodules\\gd",
+                "K:\\GDShare-mod-not-shitty\\submodules\\gd\\include"
             ],
             "defines": [
                 "_DEBUG",
