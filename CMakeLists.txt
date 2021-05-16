@@ -22,6 +22,7 @@ add_library(${PROJECT_NAME} SHARED ${SOURCES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "")
 
+option(BUILD_SHARED_LIBS "" ON)
 add_subdirectory(submodules/MinHook)
 target_link_libraries(${PROJECT_NAME} submodules/MinHook/Release/minhook.x32)
 

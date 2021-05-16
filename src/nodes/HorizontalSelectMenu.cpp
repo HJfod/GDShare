@@ -9,6 +9,22 @@ void HorizontalSelectMenu::onSelect(cocos2d::CCObject* pSender) {
     
             this->m_nSelIndex = i;
         }
+    
+    if (this->m_pCallback)
+        this->m_pCallback(this->m_nSelIndex, true);
+}
+
+void HorizontalSelectMenu::onMultiSelect(cocos2d::CCObject* pSender) {
+    for (auto i = 0u; i < this->m_vToggles.size(); i++) {
+        this->m_vMultiStates.at(i) = this->m_vToggles.at(i)->isOn();
+
+        if (this->m_vToggles.at(i) == pSender)
+            this->m_pCallback(i, this->m_vMultiStates.at(i));
+    }
+}
+
+std::vector<bool> const& HorizontalSelectMenu::getMultiStates() {
+    return this->m_vMultiStates;
 }
 
 void HorizontalSelectMenu::select(unsigned int _index) {
@@ -20,6 +36,10 @@ void HorizontalSelectMenu::select(unsigned int _index) {
 
 unsigned int HorizontalSelectMenu::getSelected() {
     return this->m_nSelIndex;
+}
+
+void HorizontalSelectMenu::setCallback(Callback const& _cb) {
+    this->m_pCallback = _cb;
 }
 
 bool HorizontalSelectMenu::init(std::vector<const char*> const& _opts) {
@@ -49,8 +69,16 @@ bool HorizontalSelectMenu::init(std::vector<const char*> const& _opts) {
             pToggleOnSpr,
             pToggleOffSpr,
             this,
-            (cocos2d::SEL_MenuHandler)&HorizontalSelectMenu::onSelect
+            this->m_bIsMulti ?
+                (cocos2d::SEL_MenuHandler)&HorizontalSelectMenu::onMultiSelect :
+                (cocos2d::SEL_MenuHandler)&HorizontalSelectMenu::onSelect
         );
+
+        if (this->m_bIsMulti) {
+            pToggle->toggle(true);
+
+            this->m_vMultiStates.push_back(false);
+        }
 
         this->m_vToggles.push_back(pToggle);
         menu->addChild(pToggle);
@@ -75,7 +103,8 @@ bool HorizontalSelectMenu::init(std::vector<const char*> const& _opts) {
     this->addChild(this->m_pBGLayer);
     this->addChild(menu);
 
-    this->select(0u);
+    if (!this->m_bIsMulti)
+        this->select(0u);
 
     return true;
 }
@@ -84,6 +113,18 @@ HorizontalSelectMenu* HorizontalSelectMenu::create(std::vector<const char*> cons
     auto pRet = new HorizontalSelectMenu();
 
     if (pRet && pRet->init(_opts)) {
+        pRet->autorelease();
+        return pRet;
+    }
+
+    CC_SAFE_DELETE(pRet);
+    return nullptr;
+}
+
+HorizontalSelectMenu* HorizontalSelectMenu::createMulti(std::vector<const char*> const& _opts) {
+    auto pRet = new HorizontalSelectMenu();
+
+    if (pRet && (pRet->m_bIsMulti = true) && pRet->init(_opts)) {
         pRet->autorelease();
         return pRet;
     }

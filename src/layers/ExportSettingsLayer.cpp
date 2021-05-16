@@ -55,7 +55,13 @@ void ExportSettingsLayer::onExport(cocos2d::CCObject*) {
         if (std::filesystem::is_directory(outputPath))
             outputPath += "\\" + this->m_pLevel->levelName + "." + gdshare::getExportTypeString(format);
 
-    if (gdshare::exportLevel( this->m_pLevel, outputPath, format ))
+    int flag = gdshare::EF_None;
+
+    if (this->m_pIncludeSong->getToggle()->isOn())
+        flag |= gdshare::EF_IncludeSong;
+
+    auto res = gdshare::exportLevel( this->m_pLevel, outputPath, format, flag );
+    if (!res.size())
         gd::FLAlertLayer::create(
             new ExportResultHandler(outputPath),
             "Success",
@@ -67,7 +73,7 @@ void ExportSettingsLayer::onExport(cocos2d::CCObject*) {
             nullptr,
             "Error",
             "OK", nullptr,
-            "Unknown <cr>error</c> exporting! :("
+            "<cr>Error</c>: " + res
         )->show();
     
     this->onClose(nullptr);
@@ -92,11 +98,11 @@ void ExportSettingsLayer::setup() {
     auto winSize = cocos2d::CCDirector::sharedDirector()->getWinSize();    
     this->m_pHorizontalMenu = HorizontalSelectMenu::create({ ".gmd", ".gmd2", ".lvl" });
 
-    this->m_pHorizontalMenu->setPosition(winSize.width / 2, winSize.height / 2 + 25.0f);
+    this->m_pHorizontalMenu->setPosition(winSize.width / 2, winSize.height / 2 + 45.0f);
     this->m_pHorizontalMenu->select(g_selectedExportType);
 
     auto pTypeLabel = cocos2d::CCLabelBMFont::create("Format:", "bigFont.fnt");
-    pTypeLabel->setPosition(winSize.width / 2, winSize.height / 2 + 58.0f);
+    pTypeLabel->setPosition(winSize.width / 2, winSize.height / 2 + 78.0f);
     pTypeLabel->setScale(.5f);
     this->m_pLayer->addChild(pTypeLabel);
 
@@ -133,12 +139,12 @@ void ExportSettingsLayer::setup() {
 
     this->m_pPathInput->setString(g_exportPath.c_str());
     this->m_pPathInput->getInputNode()->setLabelPlaceholderColor({ 50, 150, 255 });
-    this->m_pPathInput->setPosition(winSize.width / 2, winSize.height / 2 - 45.0f);
+    this->m_pPathInput->setPosition(winSize.width / 2, winSize.height / 2 - 20.0f);
 
     this->m_pLayer->addChild(this->m_pPathInput, 150);
 
     auto pPathLabel = cocos2d::CCLabelBMFont::create("Path:", "bigFont.fnt");
-    pPathLabel->setPosition(winSize.width / 2, winSize.height / 2 - 17.0f);
+    pPathLabel->setPosition(winSize.width / 2, winSize.height / 2 + 7.0f);
     pPathLabel->setScale(.5f);
     this->m_pLayer->addChild(pPathLabel);
 
@@ -169,6 +175,30 @@ void ExportSettingsLayer::setup() {
     );
 
     this->m_pButtonMenu->addChild(pExportButton);
+
+    auto pToggleOnSpr = cocos2d::CCSprite::createWithSpriteFrameName("GJ_checkOn_001.png");
+    auto pToggleOffSpr = cocos2d::CCSprite::createWithSpriteFrameName("GJ_checkOff_001.png");
+
+    pToggleOnSpr->setScale(.8f);
+    pToggleOffSpr->setScale(.8f);
+
+    this->m_pIncludeSong = BGCheckbox::create("Include song");
+    this->m_pIncludeSong->setScale(.75f);
+    this->m_pIncludeSong->setPosition(
+        0.0f, - 60.0f
+    );
+    if (g_selectedExportType != 1)
+        this->m_pIncludeSong->setEnabled(false);
+
+    this->m_pButtonMenu->addChild(this->m_pIncludeSong);
+
+    this->m_pHorizontalMenu->setCallback([this](unsigned int ix, bool enabled) -> void {
+        if (ix == 1)
+            return this->m_pIncludeSong->setEnabled(true);
+
+        this->m_pIncludeSong->setEnabled(false);
+        this->m_pIncludeSong->getToggle()->toggle(false);
+    });
 }
 
 ExportSettingsLayer* ExportSettingsLayer::create(gd::GJGameLevel* _lvl) {
@@ -179,7 +209,7 @@ ExportSettingsLayer* ExportSettingsLayer::create(gd::GJGameLevel* _lvl) {
         pRet->m_pLevel = _lvl;
 
         if (pRet->init(
-            320.0f, 220.0f,
+            320.0f, 260.0f,
             "GJ_square01.png",
             ("Export "_s + _lvl->levelName).c_str()
         )) {

@@ -5,16 +5,6 @@ bool __fastcall LevelInfoLayer::initHook(LevelInfoLayer* _self, uintptr_t, gd::G
     if (!init(_self, _lvl))
         return false;
 
-    auto menu = getChild<cocos2d::CCMenu*>(_self, 2);
-
-    gd::CCMenuItemSpriteExtra* targBtn = nullptr;
-    auto chix = menu->getChildrenCount();
-    while (getChild<gd::CCMenuItemSpriteExtra*>(menu, --chix)->getPositionX() < 0) {
-        targBtn = getChild<gd::CCMenuItemSpriteExtra*>(menu, chix );
-
-        if (chix == 0) break;
-    }
-
     auto exportButton = gd::CCMenuItemSpriteExtra::create(
         cocos2d::CCSprite::create("BE_Export_File.png"),
         _self,
@@ -22,12 +12,38 @@ bool __fastcall LevelInfoLayer::initHook(LevelInfoLayer* _self, uintptr_t, gd::G
     );
     exportButton->setUserData(_lvl);
 
-    exportButton->setPosition(
-        targBtn->getPositionX(),
-        targBtn->getPositionY() + 55.0f
-    );
+    if (_self->m_pCloneBtn) {
+        _self->m_pCloneBtn->getParent()->addChild(
+            exportButton
+        );
 
-    menu->addChild(exportButton);
+        exportButton->setPosition(
+            _self->m_pCloneBtn->getPositionX(),
+            _self->m_pCloneBtn->getPositionY() + 50.0f
+        );
+    } else if (_self->m_pLikeBtn) {
+        auto menu = _self->m_pLikeBtn->getParent();
+        auto l_ix = menu->getChildren()->indexOfObject(_self->m_pLikeBtn);
+        auto winSize = cocos2d::CCDirector::sharedDirector()->getWinSize();
+
+        auto pos_x = - _self->m_pLikeBtn->getPositionX();
+        auto pos_y = 0.0f;
+
+        for (auto ix = l_ix; ix < menu->getChildrenCount(); ix++) {
+            auto obj = getChild<cocos2d::CCNode*>(menu, ix);
+
+            if (obj->getPositionX() < 80.0f && obj->getPositionY() > pos_y)
+                    pos_y = obj->getPositionY();
+        }
+
+        menu->addChild(exportButton);
+
+        exportButton->setPosition(pos_x, pos_y + 50.0f);
+    } else {
+        _self->m_pPlayBtnMenu->addChild(exportButton);
+
+        exportButton->setPosition(-80.0f, 0.0f);
+    }
 
     return true;
 }

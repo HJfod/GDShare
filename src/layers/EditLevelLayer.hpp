@@ -2,30 +2,6 @@
 
 #include "../offsets.hpp"
 
-namespace gd {
-    class TextInputDelegate {
-        virtual void textChanged(void) {};
-        virtual void textInputOpened(void) {};
-        virtual void textInputClosed(void) {};
-        virtual void textInputShouldOffset(float) {};
-        virtual void textInputReturn(void) {};
-        virtual bool allowTextInput(void) { return true; };
-    };
-
-    class UploadActionDelegate {
-        virtual void uploadActionFinished(int, int) {};
-        virtual void uploadActionFailed(int, int) {};
-    };
-
-    class UploadPopupDelegate {
-        virtual void onClosePopup(void) {};
-    };
-
-    class SetIDPopupDelegate {
-        virtual void setIDPopupClosed(int) {};
-    };
-}
-
 class EditLevelLayer :
     public cocos2d::CCLayer,
     public gd::TextInputDelegate,
