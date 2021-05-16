@@ -8,7 +8,7 @@ call :setESC
 
 set PROJECT_NAME=GDShare
 set COMPILE_RUNNER=0
-set CONFIG=RelWithDebInfo
+set CONFIG=Release
 
 if not exist submodules\ (
     git submodule update
