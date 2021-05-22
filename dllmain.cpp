@@ -1,6 +1,6 @@
 #include "src/mod.hpp"
 
-// #define GDCONSOLE
+#define GDCONSOLE
 
 #ifdef GDCONSOLE
 #include "src/console.hpp"
@@ -21,8 +21,13 @@ DWORD WINAPI load_thread(LPVOID hModule) {
             #ifdef GDCONSOLE
             gd::console::awaitUnload();
             #endif
-        } else
+        } else {
+            MessageBoxA(nullptr, "Unable to set up hooks!", "GDShare", MB_ICONERROR);
+            #ifdef GDCONSOLE
+            gd::console::unload();
+            #endif
             FreeLibraryAndExitThread((HMODULE)hModule, 0);
+        }
     } else
         FreeLibraryAndExitThread((HMODULE)hModule, 0);
 
