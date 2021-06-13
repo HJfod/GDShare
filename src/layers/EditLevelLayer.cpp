@@ -18,7 +18,7 @@ bool __fastcall EditLevelLayer::initHook(EditLevelLayer* _self, uintptr_t, gd::G
     cocos2d::CCMenu* m = ((cocos2d::CCMenu*)children->objectAtIndex(14));
 
     auto exportButton = gd::CCMenuItemSpriteExtra::create(
-        cocos2d::CCSprite::create("BE_Export_File.png"),
+        makeSpriteOrFallback("BE_Export_File.png", "GJ_downloadBtn_001.png"),
         _self,
         (cocos2d::SEL_MenuHandler)&EditLevelLayer::onExport
     );

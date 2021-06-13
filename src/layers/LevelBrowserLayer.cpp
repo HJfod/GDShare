@@ -188,7 +188,7 @@ bool __fastcall LevelBrowserLayer::initHook(LevelBrowserLayer* _self, uintptr_t,
         );
 
         auto importButton = gd::CCMenuItemSpriteExtra::create(
-            cocos2d::CCSprite::create("BE_Import_File.png"),
+            makeSpriteOrFallback("BE_Import_File.png", "GJ_plusBtn_001.png"),
             btnMenu,
             (cocos2d::SEL_MenuHandler)&LevelBrowserLayer::onImport
         );

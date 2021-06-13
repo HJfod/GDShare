@@ -25,6 +25,14 @@ template<typename T, typename U> constexpr size_t offsetOf(U T::*member) {
     return (char*)&((T*)nullptr->*member) - (char*)nullptr;
 }
 
+inline cocos2d::CCSprite* makeSpriteOrFallback(const char* spr, const char* alt) {
+    auto res = cocos2d::CCSprite::create(spr);
+    if (!res)
+        res = cocos2d::CCSprite::createWithSpriteFrameName(alt);
+    
+    return res;
+}
+
 typedef const char* nullstr_t;
 static constexpr nullstr_t nullstr = "";
 

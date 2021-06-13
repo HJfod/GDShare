@@ -1,10 +1,10 @@
 #pragma once
 
 #include "../offsets.hpp"
-#include "../nodes/BrownAlertDelegate.hpp"
-#include "../nodes/HorizontalSelectMenu.hpp"
-#include "../nodes/BGCheckbox.hpp"
-#include "../nodes/InputNode.hpp"
+#include <BrownAlertDelegate.hpp>
+#include <HorizontalSelectMenu.hpp>
+#include <BGCheckbox.hpp>
+#include <InputNode.hpp>
 
 class ExportResultHandler : public gd::FLAlertLayerProtocol {
     protected:

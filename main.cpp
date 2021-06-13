@@ -10,6 +10,8 @@ GDMAKE_MAIN {
     LevelBrowserLayer::loadHook();
     EditLevelLayer::loadHook();
     LevelInfoLayer::loadHook();
+
+    return true;
 }
 
 GDMAKE_UNLOAD {}
