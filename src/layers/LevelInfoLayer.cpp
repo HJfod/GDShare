@@ -6,7 +6,7 @@ bool __fastcall LevelInfoLayer::initHook(LevelInfoLayer* _self, uintptr_t, gd::G
         return false;
 
     auto exportButton = gd::CCMenuItemSpriteExtra::create(
-        cocos2d::CCSprite::create("BE_Export_File.png"),
+        makeSpriteOrFallback("BE_Export_File.png", "GJ_downloadBtn_001.png"),
         _self,
         (cocos2d::SEL_MenuHandler)&EditLevelLayer::onExport
     );

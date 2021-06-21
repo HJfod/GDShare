@@ -260,30 +260,32 @@ gdshare::Result<std::string> gdshare::loadLevelFromFile(
                 return { false, "Unable to parse metadata!" };
             }
 
-            std::string songfile = metaj["song-file"];
+            try {
+                std::string songfile = metaj["song-file"];
 
-            if (songfile.size()) {
-                if (_song) {
-                    if (!zip.extractEntryToMemory(songfile, *_song))
-                        goto skip_song_file;
-
-                    std::string targetPath;
-                    if (metaj["song-is-custom"]) {
-                        try {
-                            targetPath = gd::MusicDownloadManager::pathForSong(
-                                std::stoi(songfile.substr(0, songfile.find_first_of(".")))
-                            );
-                        } catch (...) {
+                if (songfile.size()) {
+                    if (_song) {
+                        if (!zip.extractEntryToMemory(songfile, *_song))
                             goto skip_song_file;
-                        }
-                    } else
-                        // official songs are always in resources
-                        targetPath = "Resources/" + songfile;
 
-                    if (_songpath)
-                        *_songpath = targetPath;
+                        std::string targetPath;
+                        if (metaj["song-is-custom"]) {
+                            try {
+                                targetPath = gd::MusicDownloadManager::pathForSong(
+                                    std::stoi(songfile.substr(0, songfile.find_first_of(".")))
+                                );
+                            } catch (...) {
+                                goto skip_song_file;
+                            }
+                        } else
+                            // official songs are always in resources
+                            targetPath = "Resources/" + songfile;
+
+                        if (_songpath)
+                            *_songpath = targetPath;
+                    }
                 }
-            }
+            } catch (...) {}
         skip_song_file:
 
             zip.close();
