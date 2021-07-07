@@ -1,9 +1,18 @@
 {
   "ProjectName": "GDShare",
   "EntryPoint": null,
+  "Version": "v1.0",
   "ConsoleEnabled": false,
   "Compiler": 0,
   "Platform": 0,
+  "Submodules": [
+    "gd.h",
+    "MinHook",
+    "Cocos2d",
+    "nfd",
+    "Zipper",
+    "nodes"
+  ],
   "IgnoredFiles": [],
   "Libs": [
     "libs/minhook.x32.lib",
