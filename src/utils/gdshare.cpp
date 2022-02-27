@@ -153,16 +153,16 @@ std::string gdshare::exportLevel(
     ExportFormat _type,
     int _flags
 ) {
-    if (!_lvl->levelString.size())
+    if (!_lvl->m_sLevelString.size())
         return "Level string is empty!";
 
     std::string song;
 
-    if (_lvl->songID)
-        song = "<k>k45</k><i>" + std::to_string(_lvl->songID) + "</i>";
+    if (_lvl->m_nSongID)
+        song = "<k>k45</k><i>" + std::to_string(_lvl->m_nSongID) + "</i>";
     else
-        if (_lvl->audioTrack)
-            song = "<k>k8</k><i>" + std::to_string(_lvl->audioTrack) + "</i>";
+        if (_lvl->m_nAudioTrack)
+            song = "<k>k8</k><i>" + std::to_string(_lvl->m_nAudioTrack) + "</i>";
 
 
     // jesus fucking christ
@@ -175,13 +175,13 @@ std::string gdshare::exportLevel(
             << "<k>kCEK</k>"
             << "<i>4</i>"
             << "<k>k2</k>"
-            << "<s>" << _lvl->levelName << "</s>"
+            << "<s>" << _lvl->m_sLevelName << "</s>"
             << "<k>k3</k>"
             << "<s>" <<
                 gdshare::decoder::Convert(
                     gdshare::encoder::Base64(
                         gdshare::decoder::Convert(
-                            _lvl->levelDesc
+                            _lvl->m_sLevelDesc
                         )
                     )
                 )
@@ -189,7 +189,7 @@ std::string gdshare::exportLevel(
             << "<k>k4</k>"
             << "<s>" <<
                 // levelString is already stored encoded
-                _lvl->levelString
+                _lvl->m_sLevelString
             << "</s>"
             << song
             << "<k>k13</k>"
@@ -209,7 +209,7 @@ std::string gdshare::exportLevel(
 
     removeNullbytesFromString(dataStr);
 
-    if (!gdshare::saveFileFormat(_path, dataStr, _type, songFilePath, _lvl->songID))
+    if (!gdshare::saveFileFormat(_path, dataStr, _type, songFilePath, _lvl->m_nSongID))
         return "Unable to save file!\n";
     
     return "";

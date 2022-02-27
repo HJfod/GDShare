@@ -2,6 +2,12 @@
 #include "../utils/gdshare.hpp"
 #include "../utils/helpers.hpp"
 
+std::string* std_string_operator_assign(std::string* str1, char* str2) {
+    return as<std::string*(__thiscall*)(std::string*, char*)>(
+        gd::base + 0xf680
+    )(str1, str2);
+}
+
 void doImport(std::string const& _data) {
     tinyxml2::XMLDocument doc;
 
@@ -10,15 +16,36 @@ void doImport(std::string const& _data) {
     if (parseRes == tinyxml2::XMLError::XML_NO_ERROR) {
         auto addedLevel = gd::GameLevelManager::createNewLevel();
 
-        addedLevel->levelName = "Unknown";
+        addedLevel->m_sLevelName = "Unknown";
 
-        for (auto child = doc.FirstChildElement("d")->FirstChildElement("k"); child; child = child->NextSiblingElement("k"))
+        auto decodeBase64 = true;
+        auto child = doc.FirstChildElement("d");
+        if (!child) {
+            child = doc.FirstChildElement("plist");
+            if (child) {
+                child = child->FirstChildElement("dict");
+                decodeBase64 = false;
+            }
+        }
+        if (!child) {
+            gd::FLAlertLayer::create(
+                nullptr,
+                "Error importing",
+                "OK", nullptr,
+                "<cr>Error</c>: No enclosing <cy>d</c> or <cy>dict</c> tag found"
+            )->show();
+            return;
+        }
+        for (child = child->FirstChildElement("k"); child; child = child->NextSiblingElement("k"))
             switch (h$(child->GetText())) {
                 case h$("k2"): {
                     auto data = child->NextSiblingElement()->GetText();
                     if (!data) break;
 
-                    addedLevel->levelName = data;
+                    std_string_operator_assign(
+                        &addedLevel->m_sLevelName,
+                        const_cast<char*>(data)
+                    );
                 } break;
 
                 case h$("k3"): {
@@ -28,10 +55,13 @@ void doImport(std::string const& _data) {
 
                     auto desc = std::string(descData);
 
-                    if (desc.length())
+                    if (decodeBase64 && desc.length())
                         desc = gdshare::decoder::Base64(desc);
                     
-                    addedLevel->levelDesc = desc;
+                    std_string_operator_assign(
+                        &addedLevel->m_sLevelDesc,
+                        desc.data()
+                    );
                 } break;
 
                 case h$("k4"): {
@@ -59,18 +89,18 @@ void doImport(std::string const& _data) {
                 } break;
 
                 case h$("k8"): {
-                    addedLevel->audioTrack = std::stoi(child->NextSiblingElement()->GetText());
+                    addedLevel->m_nAudioTrack = std::stoi(child->NextSiblingElement()->GetText());
                 } break;
 
                 case h$("k45"): {
-                    addedLevel->songID = std::stoi(child->NextSiblingElement()->GetText());
+                    addedLevel->m_nSongID = std::stoi(child->NextSiblingElement()->GetText());
                 } break;
             }
 
         auto scene = cocos2d::CCScene::create();
 
         auto blayer = LevelBrowserLayer::create(
-            gd::GJSearchObject::create(gd::SearchType::kSearchTypeMyLevels)
+            gd::GJSearchObject::create(gd::SearchType::kGJSearchTypeMyLevels)
         );
 
         scene->addChild(blayer);
@@ -182,7 +212,7 @@ bool __fastcall LevelBrowserLayer::initHook(LevelBrowserLayer* _self, uintptr_t,
     if (!init(_self, _sobj))
         return false;
 
-    if (_sobj->getType() == gd::SearchType::kSearchTypeMyLevels) {
+    if (_sobj->getType() == gd::SearchType::kGJSearchTypeMyLevels) {
         cocos2d::CCMenu* btnMenu = getChild<cocos2d::CCMenu*>(
             _self, 8
         );

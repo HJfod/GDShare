@@ -53,7 +53,7 @@ void ExportSettingsLayer::onExport(cocos2d::CCObject*) {
 
     if (std::filesystem::exists(outputPath))
         if (std::filesystem::is_directory(outputPath))
-            outputPath += "\\" + this->m_pLevel->levelName + "." + gdshare::getExportTypeString(format);
+            outputPath += "\\" + this->m_pLevel->m_sLevelName + "." + gdshare::getExportTypeString(format);
 
     int flag = gdshare::EF_None;
 
@@ -211,7 +211,7 @@ ExportSettingsLayer* ExportSettingsLayer::create(gd::GJGameLevel* _lvl) {
         if (pRet->init(
             320.0f, 260.0f,
             "GJ_square01.png",
-            ("Export "_s + _lvl->levelName).c_str()
+            ("Export "_s + _lvl->m_sLevelName).c_str()
         )) {
             pRet->autorelease();
             return pRet;

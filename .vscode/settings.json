@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        ".gdmake": "json",
+        "ios": "cpp",
+        "istream": "cpp",
+        "ostream": "cpp",
+        "xstring": "cpp",
+        "xutility": "cpp"
+    }
+}

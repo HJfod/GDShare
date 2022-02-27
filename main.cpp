@@ -11,7 +11,7 @@ GDMAKE_MAIN {
     EditLevelLayer::loadHook();
     LevelInfoLayer::loadHook();
 
-    return true;
+    return "";
 }
 
 GDMAKE_UNLOAD {}
