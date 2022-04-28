@@ -12,6 +12,11 @@ bool __fastcall LevelInfoLayer::initHook(LevelInfoLayer* _self, uintptr_t, gd::G
     );
     exportButton->setUserData(_lvl);
 
+    auto gm = gd::GameManager::sharedState();
+    auto ratePowerSeed = *as<uintptr_t*>(as<uintptr_t>(gm) + 0x2d0);
+    auto ratePowerRand = *as<uintptr_t*>(as<uintptr_t>(gm) + 0x2d4);
+    auto ratePower = ratePowerSeed - ratePowerRand;
+
     if (_self->m_pCloneBtn) {
         _self->m_pCloneBtn->getParent()->addChild(
             exportButton
@@ -19,7 +24,7 @@ bool __fastcall LevelInfoLayer::initHook(LevelInfoLayer* _self, uintptr_t, gd::G
 
         exportButton->setPosition(
             _self->m_pCloneBtn->getPositionX(),
-            _self->m_pCloneBtn->getPositionY() + 50.0f
+            _self->m_pCloneBtn->getPositionY() + (ratePower ? 100.f : 50.f)
         );
     } else if (_self->m_pLikeBtn) {
         auto menu = _self->m_pLikeBtn->getParent();
@@ -38,7 +43,7 @@ bool __fastcall LevelInfoLayer::initHook(LevelInfoLayer* _self, uintptr_t, gd::G
 
         menu->addChild(exportButton);
 
-        exportButton->setPosition(pos_x, pos_y + 50.0f);
+        exportButton->setPosition(pos_x, pos_y + 50.f);
     } else {
         _self->m_pPlayBtnMenu->addChild(exportButton);
 
