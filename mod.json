@@ -1,0 +1,16 @@
+{
+    "geode":        "v0.2.0",
+	"version":      "v0.4.0",
+	"id":           "hjfod.gdshare",
+    "name":         "GDShare",
+    "developer":    "HJfod",
+    "description":  "Everyone's favorite tool for leaking levels",
+    "binary":       "GDShare",
+    "resources": {
+        "spritesheets": {
+            "GDShare": [
+                "resources/*.png"
+            ]
+        }
+    }
+}
