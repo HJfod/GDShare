@@ -1,8 +1,8 @@
 #pragma once
 
 #include <Geode/DefaultInclude.hpp>
-#include <Geode/Bindings.hpp>
 #include <Geode/utils/general.hpp>
+#include <Geode/binding/GJGameLevel.hpp>
 #include <optional>
 
 #ifdef GEODE_IS_WINDOWS
@@ -62,6 +62,7 @@ namespace gdshare {
     class GDSHARE_DLL ImportGmdFile : public IGmdFile<ImportGmdFile> {
     protected:
         ghc::filesystem::path m_path;
+        bool m_importSong = false;
 
         ImportGmdFile(ghc::filesystem::path const& path);
 
@@ -71,6 +72,7 @@ namespace gdshare {
         static ImportGmdFile from(ghc::filesystem::path const& path);
         bool tryInferType();
         ImportGmdFile& inferType();
+        ImportGmdFile& setImportSong(bool song);
         geode::Result<GJGameLevel*> intoLevel() const;
     };
 

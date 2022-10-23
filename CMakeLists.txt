@@ -12,6 +12,7 @@ add_library(${PROJECT_NAME} SHARED ${SOURCES})
 set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "")
 
 add_subdirectory(zipper)
+target_link_libraries(${PROJECT_NAME} staticZipper)
 
 add_compile_definitions(HJFOD_GDSHARE_EXPORTING)
 

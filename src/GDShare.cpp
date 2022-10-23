@@ -1,6 +1,9 @@
 #include "../include/GDShare.hpp"
 #include <Geode/utils/file.hpp>
-#include <Geode/Bindings.hpp>
+#include <Geode/binding/MusicDownloadManager.hpp>
+#include <Geode/utils/JsonValidation.hpp>
+#include <zipper/zipper.h>
+#include <zipper/unzipper.h>
 
 USE_GEODE_NAMESPACE();
 using namespace gdshare;
@@ -27,6 +30,14 @@ static std::string extensionWithoutDot(ghc::filesystem::path const& path) {
     return "";
 }
 
+static std::string removeNullbytesFromString(std::string const& str) {
+    auto ret = str;
+    for (auto& c : ret) {
+        if (!c) c = ' ';
+    }
+    return ret;
+}
+
 ImportGmdFile::ImportGmdFile(
     ghc::filesystem::path const& path
 ) : m_path(path) {}
@@ -50,6 +61,11 @@ ImportGmdFile& ImportGmdFile::inferType() {
 
 ImportGmdFile ImportGmdFile::from(ghc::filesystem::path const& path) {
     return ImportGmdFile(path);
+}
+
+ImportGmdFile& ImportGmdFile::setImportSong(bool song) {
+    m_importSong = song;
+    return *this;
 }
 
 Result<std::string> ImportGmdFile::getLevelData() const {
@@ -84,6 +100,53 @@ Result<std::string> ImportGmdFile::getLevelData() const {
         } break;
 
         case GmdType::Gmd2: {
+            std::ifstream file(m_path);
+            auto unzip = zipper::Unzipper(file);
+            try {
+                byte_array jsonData;
+                if (!unzip.extractEntryToMemory("level.meta", jsonData)) {
+                    return Err("Unable to read level metadata");
+                }
+                auto json = nlohmann::json::parse(jsonData.begin(), jsonData.end());
+                JsonChecker checker(json);
+                auto root = checker.root("[level.meta]").obj();
+                
+                // unzip song
+                std::string songFile;
+                root.has("song-file").into(songFile);
+                if (songFile.size()) {
+                    byte_array songData;
+                    if (!unzip.extractEntryToMemory(songFile, songData)) {
+                        return Err("Unable to read level song");
+                    }
+                    ghc::filesystem::path songTargetPath;
+                    if (root.has("song-is-custom").get<bool>()) {
+                        songTargetPath = MusicDownloadManager::sharedState()->pathForSong(
+                            std::stoi(songFile.substr(0, songFile.find_first_of(".")))
+                        );
+                    } else {
+                        songTargetPath = "Resources/" + songFile;
+                    }
+                    // if we're replacing a file, figure out a different name 
+                    // for the old one
+                    ghc::filesystem::path oldSongPath = songTargetPath;
+                    while (ghc::filesystem::exists(oldSongPath)) {
+                        oldSongPath.replace_filename(oldSongPath.stem().string() + "_.mp3");
+                    }
+                    if (ghc::filesystem::exists(oldSongPath)) {
+                        ghc::filesystem::rename(songTargetPath, oldSongPath);
+                    }
+                    (void)file::writeBinary(songTargetPath, songData);
+                }
+
+                byte_array levelData;
+                if (!unzip.extractEntryToMemory("level.data", levelData)) {
+                    return Err("Unable to read level data");
+                }
+                return Ok(std::string(levelData.begin(), levelData.end()));
+            } catch(...) {
+                return Err("Unable to parse level metadata");
+            }
         } break;
 
         default: {
@@ -100,7 +163,7 @@ Result<GJGameLevel*> ImportGmdFile::intoLevel() const {
 
     auto value =
         "<?xml version=\"1.0\"?><plist version=\"1.0\" gjver=\"2.0\"><dict><k>root</k>" +
-        data.value() +
+        removeNullbytesFromString(data.value()) +
         "</dict></plist>";
     
     auto dict = std::make_unique<DS_Dictionary>();
