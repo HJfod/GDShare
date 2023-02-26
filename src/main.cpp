@@ -1,16 +1,17 @@
-#include "../include/GDShare.hpp"
+
 #include <Geode/Loader.hpp>
 #include <Geode/Modify.hpp>
 #include <Geode/utils/cocos.hpp>
 #include <Geode/modify/LevelBrowserLayer.hpp>
 #include <Geode/modify/IDManager.hpp>
+#include <Geode/ui/Popup.hpp>
+#include <hjfod.gmd-api/include/GMD.hpp>
 
 USE_GEODE_NAMESPACE();
-
-using namespace gdshare;
+using namespace gmd;
 
 static auto IMPORT_PICK_OPTIONS = file::FilePickOptions {
-    "",
+    std::nullopt,
     {
         {
             "Level Files",
@@ -23,7 +24,109 @@ static auto IMPORT_PICK_OPTIONS = file::FilePickOptions {
     }
 };
 
-class $modify(ImportLayer, LevelBrowserLayer) {
+class ExportLevelLayer : public Popup<GJGameLevel*> {
+protected:
+    GJGameLevel* m_level;
+
+    bool setup(GJGameLevel* level) {
+        m_noElasticity = true;
+        return true;
+    }
+
+public:
+    static ExportLevelLayer* create(GJGameLevel* level) {
+        auto ret = new ExportLevelLayer();
+        if (ret && ret->init(348.f, 230.f, level)) {
+            ret->autorelease();
+            return ret;
+        }
+        CC_SAFE_DELETE(ret);
+        return nullptr;
+    }
+};
+
+void promptExportLevel(GJGameLevel* level) {
+    auto opts = IMPORT_PICK_OPTIONS;
+    opts.defaultPath = std::string(level->m_levelName) + ".gmd";
+    if (auto path = file::pickFile(file::PickMode::SaveFile, opts)) {
+        auto res = exportLevelAsGmd(level, path.unwrap());
+        if (res) {
+            createQuickPopup(
+                "Exported",
+                "Succesfully exported level",
+                "OK", "Open File",
+                [path](auto, bool btn2) {
+                    if (btn2) file::openFolder(path.unwrap());
+                }
+            );
+        }
+        else {
+            FLAlertLayer::create(
+                "Error",
+                "Unable to export: " + res.unwrapErr(),
+                "OK"
+            )->show();
+        }
+    }
+}
+
+struct $modify(ExportMyLevelLayer, EditLevelLayer) {
+    bool init(GJGameLevel* level) {
+        if (!EditLevelLayer::init(level))
+            return false;
+        
+        auto menu = this->getChildByID("level-actions-menu");
+        if (menu) {
+            auto btn = CCMenuItemSpriteExtra::create(
+                CircleButtonSprite::createWithSpriteFrameName(
+                    "file.png"_spr, .525f,
+                    CircleBaseColor::Green,
+                    CircleBaseSize::MediumAlt
+                ),
+                this, menu_selector(ExportMyLevelLayer::onExport)
+            );
+            btn->setID("export-button"_spr);
+            menu->addChild(btn);
+            menu->updateLayout();
+        }
+
+        return true;
+    }
+
+    void onExport(CCObject*) {
+        promptExportLevel(m_level);
+    }
+};
+
+struct $modify(ExportOnlineLevelLayer, LevelInfoLayer) {
+    bool init(GJGameLevel* level) {
+        if (!LevelInfoLayer::init(level))
+            return false;
+        
+        auto menu = this->getChildByID("left-side-menu");
+        if (menu) {
+            auto btn = CCMenuItemSpriteExtra::create(
+                CircleButtonSprite::createWithSpriteFrameName(
+                    "file.png"_spr, .475f,
+                    CircleBaseColor::Green,
+                    CircleBaseSize::Medium
+                ),
+                this, menu_selector(ExportOnlineLevelLayer::onExport)
+            );
+            btn->setID("export-button"_spr);
+            menu->addChild(btn);
+            menu->updateLayout();
+        }
+
+        return true;
+    }
+
+    void onExport(CCObject*) {
+        promptExportLevel(m_level);
+    }
+};
+
+struct $modify(ImportLayer, LevelBrowserLayer) {
     static void importFile(ghc::filesystem::path const& path) {
         auto import = ImportGmdFile::from(path);
         if (!import.tryInferType()) {
@@ -69,21 +172,19 @@ class $modify(ImportLayer, LevelBrowserLayer) {
         if (!LevelBrowserLayer::init(search))
             return false;
 
-        NodeStringIDManager::get()->provide(this);
-        
         if (search->m_searchType == SearchType::MyLevels) {
-            // 3rd button menu is the one with the 'New' button
-            // todo: add some sort of common API to Geode for this
             auto btnMenu = this->getChildByID("new-level-menu");
 
             auto importBtn = CCMenuItemSpriteExtra::create(
-                SafeCreate<CCSprite>()
-                    .makeWithFrame("import.png"_spr)
-                    .orMakeWithFrame<CCSprite>("GJ_plusBtn_001.png"),
+                CircleButtonSprite::createWithSpriteFrameName(
+                    "file.png"_spr, .575f,
+                    CircleBaseColor::Pink,
+                    CircleBaseSize::Big
+                ),
                 this,
                 menu_selector(ImportLayer::onImport)
             );
-            importBtn->setID("import-level-button");
+            importBtn->setID("import-level-button"_spr);
             btnMenu->addChild(importBtn);
             btnMenu->updateLayout();
         }

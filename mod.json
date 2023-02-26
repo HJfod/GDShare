@@ -1,10 +1,10 @@
 {
-    "geode":        "v0.6.1",
-	"version":      "v0.4.0",
+    "geode":        "v1.0.0",
+	"version":      "v1.0.0",
 	"id":           "hjfod.gdshare",
     "name":         "GDShare",
     "developer":    "HJfod",
-    "description":  "Everyone's favorite tool for leaking levels",
+    "description":  "Share levels as files",
     "resources": {
         "spritesheets": {
             "GDShare": [
@@ -12,18 +12,11 @@
             ]
         }
     },
-    "settings": {
-        "fps-value": {
-            "name": "FPS Value",
-            "description": "Its the fps vvalue",
-            "type": "int",
-            "default": 60,
-            "min": 0,
-            "control": {
-                "input": true,
-                "slider": false,
-                "arrows": false
-            }
+    "dependencies": [
+        {
+            "id": "hjfod.gmd-api",
+            "version": ">=v1.0.0",
+            "required": true
         }
-    }
+    ]
 }
