@@ -128,7 +128,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: Build Output
-          path: "${{ env.MOD_NAME }}.geode"
+          path: "${{ env.MOD_ID }}.geode"
           
       - uses: geekyeggo/delete-artifact@v2
         with:
