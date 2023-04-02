@@ -60,11 +60,18 @@ jobs:
         cd bin/nightly
         curl -L https://github.com/geode-sdk/geode/releases/download/${{ env.GEODE_VERSION }}/geode-${{ env.GEODE_VERSION }}-${{ matrix.config.platform_suffix }}.zip -o geode-sdk.zip
         tar -xf geode-sdk.zip
+            
+    - name: Download and Unzip CLI
+      run: |
+        mkdir ${{ github.workspace }}/cli
+        cd ${{ github.workspace }}/cli
+        curl -L https://github.com/geode-sdk/cli/releases/download/${{ env.CLI_VERSION }}/geode-cli-${{ env.CLI_VERSION }}-${{ matrix.config.platform_suffix }}.zip -o geode-cli.zip
+        tar -xf geode-cli.zip
       
     - name: Configure CMake
       run: |
         cd ${{ github.workspace }}
-        cmake -B build ${{ matrix.config.extra_flags }} -DGEODE_DISABLE_CLI_CALLS=1
+        cmake -B build ${{ matrix.config.extra_flags }} -DCLI_PATH=${{ github.workspace }}/cli -DGEODE_DONT_INSTALL_MODS=On
     
     - name: Build
       run: |
