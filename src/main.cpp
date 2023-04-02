@@ -7,7 +7,7 @@
 #include <Geode/ui/Popup.hpp>
 #include <hjfod.gmd-api/include/GMD.hpp>
 
-USE_GEODE_NAMESPACE();
+using namespace geode::prelude;
 using namespace gmd;
 
 static auto IMPORT_PICK_OPTIONS = file::FilePickOptions {
