@@ -70,6 +70,8 @@ jobs:
         curl -L https://github.com/geode-sdk/cli/releases/download/${{ env.CLI_VERSION }}/geode-cli-${{ env.CLI_VERSION }}-${{ matrix.config.platform_suffix }}.zip -o geode-cli.zip
         tar -xf geode-cli.zip
         mkdir ${{ github.workspace }}/profile
+        mkdir ${{ github.workspace }}/profile/geode
+        mkdir ${{ github.workspace }}/profile/geode/mods
         ./${{ matrix.config.cli_name }} profile add --name GithubActions ${{ github.workspace }}/profile
       
     - name: Configure CMake
