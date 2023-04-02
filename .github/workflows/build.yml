@@ -25,6 +25,7 @@ jobs:
           extra_flags: '-T host=x64 -A win32'
           out_paths:  './build/Release/*.dll'
           platform_suffix: 'win'
+          cli_setup: ''
           cli_name: 'geode.exe'
           
         - name: "macOS"
@@ -33,6 +34,7 @@ jobs:
           extra_flags: ""
           out_paths: './build/*.dylib'
           platform_suffix: 'mac'
+          cli_setup: 'chmod a+rwx ./geode'
           cli_name: 'geode'
           
     name: ${{ matrix.config.name }}
@@ -69,6 +71,7 @@ jobs:
         cd ${{ github.workspace }}/cli
         curl -L https://github.com/geode-sdk/cli/releases/download/${{ env.CLI_VERSION }}/geode-cli-${{ env.CLI_VERSION }}-${{ matrix.config.platform_suffix }}.zip -o geode-cli.zip
         tar -xf geode-cli.zip
+        ${{ matrix.config.cli_setup }}
         mkdir ${{ github.workspace }}/profile
         mkdir ${{ github.workspace }}/profile/geode
         mkdir ${{ github.workspace }}/profile/geode/mods
