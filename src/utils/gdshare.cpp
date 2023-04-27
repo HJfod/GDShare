@@ -88,6 +88,18 @@ void gdshare::removeNullbytesFromString(std::string & str) {
             str.at(i) = 32;
 }
 
+static bool verifySongFileName(std::string const& name) {
+    // Make sure that the song name is .mp3 and the name is parseable as a number
+    if (name.ends_with(".mp3")) {
+        try {
+            (void)std::stoi(name.substr(0, name.size() - 4));
+            return true;
+        }
+        catch(...) {}
+    }
+    return false;
+}
+
 bool gdshare::saveFileFormat(
     std::string const& _path,
     std::string const& _data,
@@ -264,6 +276,10 @@ gdshare::Result<std::string> gdshare::loadLevelFromFile(
                 std::string songfile = metaj["song-file"];
 
                 if (songfile.size()) {
+                    if (!verifySongFileName(songFile)) {
+                        return { false, "Invalid song file name!" };
+                    }
+
                     if (_song) {
                         if (!zip.extractEntryToMemory(songfile, *_song))
                             goto skip_song_file;
