@@ -1,8 +1,9 @@
 
 #include <Geode/Loader.hpp>
-#include <Geode/Modify.hpp>
 #include <Geode/utils/cocos.hpp>
 #include <Geode/modify/LevelBrowserLayer.hpp>
+#include <Geode/modify/LevelInfoLayer.hpp>
+#include <Geode/modify/EditLevelLayer.hpp>
 #include <Geode/modify/IDManager.hpp>
 #include <Geode/ui/Popup.hpp>
 #include <hjfod.gmd-api/include/GMD.hpp>
