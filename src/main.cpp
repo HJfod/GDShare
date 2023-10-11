@@ -49,15 +49,15 @@ public:
 void promptExportLevel(GJGameLevel* level) {
     auto opts = IMPORT_PICK_OPTIONS;
     opts.defaultPath = std::string(level->m_levelName) + ".gmd";
-    file::pickFile(file::PickMode::SaveFile, opts, [=](auto path){
-        auto res = exportLevelAsGmd(level, path);
+    if (auto path = file::pickFile(file::PickMode::SaveFile, opts)) {
+        auto res = exportLevelAsGmd(level, path.unwrap());
         if (res) {
             createQuickPopup(
                 "Exported",
                 "Succesfully exported level",
                 "OK", "Open File",
                 [path](auto, bool btn2) {
-                    if (btn2) file::openFolder(path);
+                    if (btn2) file::openFolder(path.unwrap());
                 }
             );
         }
@@ -68,7 +68,7 @@ void promptExportLevel(GJGameLevel* level) {
                 "OK"
             )->show();
         }
-    });
+    }
 }
 
 struct $modify(ExportMyLevelLayer, EditLevelLayer) {
@@ -161,13 +161,12 @@ struct $modify(ImportLayer, LevelBrowserLayer) {
     }
 
     void onImport(CCObject*) {
-        file::pickFile(
+        if (auto file = file::pickFile(
             file::PickMode::OpenFile,
-            IMPORT_PICK_OPTIONS,
-            [=](auto file) {
-                this->importFile(file);
-            }
-        );
+            IMPORT_PICK_OPTIONS
+        )) {
+            this->importFile(file.value());
+        }
     }
 
     bool init(GJSearchObject* search) {
