@@ -21,4 +21,4 @@ set(GEODE_LINK_NIGHTLY On)
 add_subdirectory($ENV{GEODE_SDK} $ENV{GEODE_SDK}/build)
 
 target_link_libraries(${PROJECT_NAME} geode-sdk)
-setup_geode_mod(${PROJECT_NAME})
+setup_geode_mod(${PROJECT_NAME} EXTERNALS geode.node-ids:1.0.0)

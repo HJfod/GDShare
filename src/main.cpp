@@ -99,8 +99,8 @@ struct $modify(ExportMyLevelLayer, EditLevelLayer) {
 };
 
 struct $modify(ExportOnlineLevelLayer, LevelInfoLayer) {
-    bool init(GJGameLevel* level) {
-        if (!LevelInfoLayer::init(level))
+    bool init(GJGameLevel* level, bool challenge) {
+        if (!LevelInfoLayer::init(level, challenge))
             return false;
         
         auto menu = this->getChildByID("left-side-menu");

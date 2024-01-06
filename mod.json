@@ -1,5 +1,5 @@
 {
-    "geode":        "v1.0.0",
+    "geode":        "v2.0.0",
 	"version":      "v1.0.0",
 	"id":           "hjfod.gdshare",
     "name":         "GDShare",
@@ -15,8 +15,11 @@
     "dependencies": [
         {
             "id": "hjfod.gmd-api",
-            "version": ">=v1.0.0",
-            "required": true
+            "version": "v1.0.0"
+        },
+        {
+            "id": "geode.node-ids",
+            "version": "v1.0.0"
         }
     ]
 }
