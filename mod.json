@@ -1,5 +1,6 @@
 {
     "geode":        "v2.0.0",
+    "gd":           "2.204",
 	"version":      "v1.0.0",
 	"id":           "hjfod.gdshare",
     "name":         "GDShare",
