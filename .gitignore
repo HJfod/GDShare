@@ -1,2 +1,42 @@
-build/
-.vscode/
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Macos be like
+**/.DS_Store
+
+# Cache files for Sublime Text
+**/*.tmlanguage.cache
+**/*.tmPreferences.cache
+**/*.stTheme.cache
+
+# Workspace files are user-specific
+**/*.sublime-workspace
+**/*.sublime-project
+.vscode
+.idea
+
+# Ignore build folders
+**/build

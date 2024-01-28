@@ -1,8 +1,9 @@
 
 #include <Geode/Loader.hpp>
-#include <Geode/Modify.hpp>
 #include <Geode/utils/cocos.hpp>
 #include <Geode/modify/LevelBrowserLayer.hpp>
+#include <Geode/modify/LevelInfoLayer.hpp>
+#include <Geode/modify/EditLevelLayer.hpp>
 #include <Geode/modify/IDManager.hpp>
 #include <Geode/ui/Popup.hpp>
 #include <hjfod.gmd-api/include/GMD.hpp>
@@ -48,15 +49,15 @@ public:
 void promptExportLevel(GJGameLevel* level) {
     auto opts = IMPORT_PICK_OPTIONS;
     opts.defaultPath = std::string(level->m_levelName) + ".gmd";
-    if (auto path = file::pickFile(file::PickMode::SaveFile, opts)) {
-        auto res = exportLevelAsGmd(level, path.unwrap());
+    file::pickFile(file::PickMode::SaveFile, opts, [=](auto path){
+        auto res = exportLevelAsGmd(level, path);
         if (res) {
             createQuickPopup(
                 "Exported",
                 "Succesfully exported level",
                 "OK", "Open File",
                 [path](auto, bool btn2) {
-                    if (btn2) file::openFolder(path.unwrap());
+                    if (btn2) file::openFolder(path);
                 }
             );
         }
@@ -67,7 +68,7 @@ void promptExportLevel(GJGameLevel* level) {
                 "OK"
             )->show();
         }
-    }
+    });
 }
 
 struct $modify(ExportMyLevelLayer, EditLevelLayer) {
@@ -160,12 +161,13 @@ struct $modify(ImportLayer, LevelBrowserLayer) {
     }
 
     void onImport(CCObject*) {
-        if (auto file = file::pickFile(
+        file::pickFile(
             file::PickMode::OpenFile,
-            IMPORT_PICK_OPTIONS
-        )) {
-            this->importFile(file.value());
-        }
+            IMPORT_PICK_OPTIONS,
+            [=](auto file) {
+                this->importFile(file);
+            }
+        );
     }
 
     bool init(GJSearchObject* search) {

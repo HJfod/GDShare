@@ -1,7 +1,11 @@
 {
-    "geode":        "v2.0.0",
-    "gd":           "2.204",
-	"version":      "v1.0.4",
+  "geode":        "2.0.0",
+  "gd": {
+    "win": "2.204",
+    "android": "2.205",
+    "mac": "2.200"
+  }
+	"version":      "1.0.4",
 	"id":           "hjfod.gdshare",
     "name":         "GDShare",
     "developer":    "HJfod",
