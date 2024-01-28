@@ -1,5 +1,10 @@
 {
-    "geode":        "1.3.0",
+  "geode":        "2.0.0",
+  "gd": {
+    "win": "2.204",
+    "android": "2.205",
+    "mac": "2.200"
+  }
 	"version":      "1.0.4",
 	"id":           "hjfod.gdshare",
     "name":         "GDShare",
@@ -15,8 +20,11 @@
     "dependencies": [
         {
             "id": "hjfod.gmd-api",
-            "version": ">=v1.0.0",
-            "required": true
+            "version": "v1.0.0"
+        },
+        {
+            "id": "geode.node-ids",
+            "version": "v1.0.0"
         }
     ]
 }
