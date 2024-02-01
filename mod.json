@@ -1,15 +1,15 @@
 {
-  "geode":        "2.0.0",
-  "gd": {
-    "win": "2.204",
-    "android": "2.205",
-    "mac": "2.200"
-  }
-	"version":      "1.0.4",
-	"id":           "hjfod.gdshare",
-    "name":         "GDShare",
-    "developer":    "HJfod",
-    "description":  "Share levels as files",
+    "geode": "v2.0.0",
+	"gd": {
+		"android": "2.205",
+		"win": "2.204",
+		"mac": "2.200"
+	},
+	"version": "v1.0.4",
+	"id": "hjfod.gdshare",
+    "name": "GDShare",
+    "developer": "HJfod",
+    "description": "Share levels as files",
     "resources": {
         "spritesheets": {
             "GDShare": [
@@ -20,7 +20,7 @@
     "dependencies": [
         {
             "id": "hjfod.gmd-api",
-            "version": "v1.0.0"
+            "version": "v1.0.1"
         },
         {
             "id": "geode.node-ids",
