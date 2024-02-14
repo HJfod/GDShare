@@ -40,3 +40,4 @@
 
 # Ignore build folders
 **/build
+**/build-*
