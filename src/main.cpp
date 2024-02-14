@@ -25,27 +25,6 @@ static auto IMPORT_PICK_OPTIONS = file::FilePickOptions {
     }
 };
 
-class ExportLevelLayer : public Popup<GJGameLevel*> {
-protected:
-    GJGameLevel* m_level;
-
-    bool setup(GJGameLevel* level) {
-        m_noElasticity = true;
-        return true;
-    }
-
-public:
-    static ExportLevelLayer* create(GJGameLevel* level) {
-        auto ret = new ExportLevelLayer();
-        if (ret && ret->init(348.f, 230.f, level)) {
-            ret->autorelease();
-            return ret;
-        }
-        CC_SAFE_DELETE(ret);
-        return nullptr;
-    }
-};
-
 void promptExportLevel(GJGameLevel* level) {
     auto opts = IMPORT_PICK_OPTIONS;
     opts.defaultPath = std::string(level->m_levelName) + ".gmd";
