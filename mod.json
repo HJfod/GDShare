@@ -10,6 +10,7 @@
     "name": "GDShare",
     "developer": "HJfod",
     "description": "Share levels as files",
+    "repository": "https://github.com/HJfod/gdshare",
     "resources": {
         "spritesheets": {
             "GDShare": [
