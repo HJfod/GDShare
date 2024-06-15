@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.3.0)
+cmake_minimum_required(VERSION 3.28.0)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -19,4 +19,4 @@ endif()
 add_subdirectory($ENV{GEODE_SDK} ${CMAKE_CURRENT_BINARY_DIR}/geode)
 
 target_link_libraries(${PROJECT_NAME} geode-sdk)
-setup_geode_mod(${PROJECT_NAME} EXTERNALS geode.node-ids:1.0.0)
+setup_geode_mod(${PROJECT_NAME} EXTERNALS geode.node-ids:1.12.0)

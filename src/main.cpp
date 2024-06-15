@@ -1,10 +1,10 @@
-
 #include <Geode/Loader.hpp>
 #include <Geode/utils/cocos.hpp>
 #include <Geode/modify/LevelBrowserLayer.hpp>
 #include <Geode/modify/LevelInfoLayer.hpp>
 #include <Geode/modify/EditLevelLayer.hpp>
 #include <Geode/modify/IDManager.hpp>
+#include <Geode/modify/LevelListLayer.hpp>
 #include <Geode/ui/Popup.hpp>
 #include <hjfod.gmd-api/include/GMD.hpp>
 
@@ -15,30 +15,42 @@ static auto IMPORT_PICK_OPTIONS = file::FilePickOptions {
     std::nullopt,
     {
         {
-            "Level Files",
-            { "*.gmd2", "*.gmd", "*.lvl" }
-        },
-        {
-            "GMD Files",
-            { "*.gmd2", "*.gmd" }
+            "GD Level Files",
+            { "*.gmd", "*.gmdl" }
         }
     }
 };
 
-static Task<Result<ghc::filesystem::path>> promptExportLevel(GJGameLevel* level) {
+template <class L>
+static Task<Result<std::filesystem::path>> promptExportLevel(L* level) {
     auto opts = IMPORT_PICK_OPTIONS;
-    opts.defaultPath = std::string(level->m_levelName) + ".gmd";
+    if constexpr (std::is_same_v<L, GJLevelList>) {
+        opts.defaultPath = level->m_listName + ".gmdl";
+    }
+    else {
+        opts.defaultPath = level->m_levelName + ".gmd";
+    }
     return file::pick(file::PickMode::SaveFile, opts);
 }
-static void onExportFilePick(GJGameLevel* level, typename Task<Result<ghc::filesystem::path>>::Event* event) {
+template <class L>
+static void onExportFilePick(L* level, typename Task<Result<std::filesystem::path>>::Event* event) {
     if (auto result = event->getValue()) {
         if (result->isOk()) {
             auto path = result->unwrap();
-            auto res = exportLevelAsGmd(level, path);
+            Result<> res;
+            if constexpr (std::is_same_v<L, GJLevelList>) {
+                res = exportListAsGmd(level, path);
+            }
+            else {
+                res = exportLevelAsGmd(level, path);
+            }
             if (res) {
                 createQuickPopup(
                     "Exported",
-                    "Succesfully exported level",
+                    (std::is_same_v<L, GJLevelList> ?
+                        "Succesfully exported list" :
+                        "Succesfully exported level"
+                    ),
                     "OK", "Open File",
                     [path](auto, bool btn2) {
                         if (btn2) file::openFolder(path);
@@ -61,9 +73,10 @@ static void onExportFilePick(GJGameLevel* level, typename Task<Result<ghc::files
 
 struct $modify(ExportMyLevelLayer, EditLevelLayer) {
     struct Fields {
-        EventListener<Task<Result<ghc::filesystem::path>>> pickListener;
+        EventListener<Task<Result<std::filesystem::path>>> pickListener;
     };
 
+    $override
     bool init(GJGameLevel* level) {
         if (!EditLevelLayer::init(level))
             return false;
@@ -94,9 +107,10 @@ struct $modify(ExportMyLevelLayer, EditLevelLayer) {
 
 struct $modify(ExportOnlineLevelLayer, LevelInfoLayer) {
     struct Fields {
-        EventListener<Task<Result<ghc::filesystem::path>>> pickListener;
+        EventListener<Task<Result<std::filesystem::path>>> pickListener;
     };
 
+    $override
     bool init(GJGameLevel* level, bool challenge) {
         if (!LevelInfoLayer::init(level, challenge))
             return false;
@@ -127,29 +141,41 @@ struct $modify(ExportOnlineLevelLayer, LevelInfoLayer) {
 
 struct $modify(ImportLayer, LevelBrowserLayer) {
     struct Fields {
-        EventListener<Task<Result<std::vector<ghc::filesystem::path>>>> pickListener;
+        EventListener<Task<Result<std::vector<std::filesystem::path>>>> pickListener;
     };
 
-    static void importFiles(std::vector<ghc::filesystem::path> const& paths) {
+    static void importFiles(std::vector<std::filesystem::path> const& paths) {
         for (auto const& path : paths) {
-            auto import = ImportGmdFile::from(path);
-            if (!import.tryInferType()) {
-                // todo: show popup to pick type
-                return FLAlertLayer::create(
-                    "Error Importing",
-                    "Unable to figure out <cy>file type</c>!",
-                    "OK"
-                )->show();
+            switch (getGmdFileKind(path)) {
+                case GmdFileKind::List: {
+                    auto res = gmd::importGmdAsList(path);
+                    if (res) {
+                        LocalLevelManager::get()->m_localLists->insertObject(*res, 0);
+                    }
+                    else {
+                        return FLAlertLayer::create("Error Importing", res.unwrapErr(), "OK")->show();
+                    }
+                } break;
+
+                case GmdFileKind::Level: {
+                    auto res = gmd::importGmdAsLevel(path);
+                    if (res) {
+                        LocalLevelManager::get()->m_localLevels->insertObject(*res, 0);
+                    }
+                    else {
+                        return FLAlertLayer::create("Error Importing", res.unwrapErr(), "OK")->show();
+                    }
+                } break;
+
+                case GmdFileKind::None: {
+                    // todo: show popup to pick type
+                    return FLAlertLayer::create(
+                        "Error Importing",
+                        fmt::format("Selected file '<cp>{}</c>' is not a GMD file!", path),
+                        "OK"
+                    )->show();
+                } break;
             }
-            auto res = import.intoLevel();
-            if (!res) {
-                return FLAlertLayer::create(
-                    "Error Importing",
-                    res.error(),
-                    "OK"
-                )->show();
-            }
-            LocalLevelManager::get()->m_localLevels->insertObject(res.value(), 0);
         }
 
         auto scene = CCScene::create();
@@ -174,6 +200,7 @@ struct $modify(ImportLayer, LevelBrowserLayer) {
         m_fields->pickListener.setFilter(file::pickMany(IMPORT_PICK_OPTIONS));
     }
 
+    $override
     bool init(GJSearchObject* search) {
         if (!LevelBrowserLayer::init(search))
             return false;
@@ -196,5 +223,38 @@ struct $modify(ImportLayer, LevelBrowserLayer) {
         }
 
         return true;
+    }
+};
+
+struct $modify(ExportListLayer, LevelListLayer) {
+    struct Fields {
+        EventListener<Task<Result<std::filesystem::path>>> pickListener;
+    };
+
+    $override
+    bool init(GJLevelList* level) {
+        if (!LevelListLayer::init(level))
+            return false;
+        
+        if (auto menu = this->getChildByID("main-menu")) {
+            auto btn = CCMenuItemSpriteExtra::create(
+                CircleButtonSprite::createWithSpriteFrameName(
+                    "file.png"_spr, .8f,
+                    CircleBaseColor::Green,
+                    CircleBaseSize::Medium
+                ),
+                this, menu_selector(ExportListLayer::onExport)
+            );
+            btn->setID("export-button"_spr);
+            menu->addChild(btn);
+            menu->updateLayout();
+        }
+
+        return true;
+    }
+
+    void onExport(CCObject*) {
+        m_fields->pickListener.bind([list = m_levelList](auto* ev) { onExportFilePick(list, ev); });
+        m_fields->pickListener.setFilter(promptExportLevel(m_levelList));
     }
 };
