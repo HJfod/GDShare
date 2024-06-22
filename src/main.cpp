@@ -25,10 +25,10 @@ template <class L>
 static Task<Result<std::filesystem::path>> promptExportLevel(L* level) {
     auto opts = IMPORT_PICK_OPTIONS;
     if constexpr (std::is_same_v<L, GJLevelList>) {
-        opts.defaultPath = level->m_listName + ".gmdl";
+        opts.defaultPath = std::string(level->m_listName) + ".gmdl";
     }
     else {
-        opts.defaultPath = level->m_levelName + ".gmd";
+        opts.defaultPath = std::string(level->m_levelName) + ".gmd";
     }
     return file::pick(file::PickMode::SaveFile, opts);
 }
