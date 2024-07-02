@@ -205,7 +205,7 @@ struct $modify(ImportLayer, LevelBrowserLayer) {
         if (!LevelBrowserLayer::init(search))
             return false;
 
-        if (search->m_searchType == SearchType::MyLevels) {
+        if (search->m_searchType == SearchType::MyLevels || search->m_searchType == SearchType::MyLists) {
             auto btnMenu = this->getChildByID("new-level-menu");
 
             auto importBtn = CCMenuItemSpriteExtra::create(
