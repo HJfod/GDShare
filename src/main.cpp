@@ -218,8 +218,15 @@ struct $modify(ImportLayer, LevelBrowserLayer) {
                 menu_selector(ImportLayer::onImport)
             );
             importBtn->setID("import-level-button"_spr);
-            btnMenu->addChild(importBtn);
-            btnMenu->updateLayout();
+
+            // This one has an ID but no layout which is CRINGE
+            if (search->m_searchType == SearchType::MyLists) {
+                btnMenu->addChildAtPosition(importBtn, Anchor::BottomLeft, ccp(0, 60), false);
+            }
+            else {
+                btnMenu->addChild(importBtn);
+                btnMenu->updateLayout();
+            }
         }
 
         return true;
