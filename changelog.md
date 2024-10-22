@@ -1,3 +1,6 @@
+# v1.3.2
+ * Fix import button in My Lists being misplaced pt. 2
+
 # v1.3.1
  * Fix import button in My Lists being misplaced
 

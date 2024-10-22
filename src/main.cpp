@@ -220,7 +220,7 @@ struct $modify(ImportLayer, LevelBrowserLayer) {
             importBtn->setID("import-level-button"_spr);
 
             // This one has an ID but no layout which is CRINGE
-            if (search->m_searchType == SearchType::MyLists) {
+            if (search->m_searchType == SearchType::MyLists && search->m_searchIsOverlay) {
                 btnMenu->addChildAtPosition(importBtn, Anchor::BottomLeft, ccp(0, 60), false);
             }
             else {
