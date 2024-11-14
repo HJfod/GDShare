@@ -20,12 +20,12 @@
     "dependencies": [
         {
             "id": "hjfod.gmd-api",
-            "version": "1.3.0",
+            "version": ">=1.3.0",
             "importance": "required"
         },
         {
             "id": "geode.node-ids",
-            "version": "1.12.0",
+            "version": ">=1.12.0",
             "importance": "required"
         }
     ],
