@@ -1,3 +1,7 @@
+
+# v1.4.0
+ * Add 2.2074 support (except for Mac :c)
+
 # v1.3.2
  * Fix import button in My Lists being misplaced pt. 2
 

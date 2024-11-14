@@ -37,14 +37,14 @@ static void onExportFilePick(L* level, typename Task<Result<std::filesystem::pat
     if (auto result = event->getValue()) {
         if (result->isOk()) {
             auto path = result->unwrap();
-            Result<> res;
+            std::optional<std::string> err;
             if constexpr (std::is_same_v<L, GJLevelList>) {
-                res = exportListAsGmd(level, path);
+                err = exportListAsGmd(level, path).err();
             }
             else {
-                res = exportLevelAsGmd(level, path);
+                err = exportLevelAsGmd(level, path).err();
             }
-            if (res) {
+            if (!err) {
                 createQuickPopup(
                     "Exported",
                     (std::is_same_v<L, GJLevelList> ?
@@ -60,7 +60,7 @@ static void onExportFilePick(L* level, typename Task<Result<std::filesystem::pat
             else {
                 FLAlertLayer::create(
                     "Error",
-                    "Unable to export: " + res.unwrapErr(),
+                    "Unable to export: " + err.value(),
                     "OK"
                 )->show();
             }
