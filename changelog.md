@@ -1,4 +1,7 @@
 
+## v1.4.1
+ * Update Geode version
+
 # v1.4.0
  * Add 2.2074 support (except for Mac :c)
 

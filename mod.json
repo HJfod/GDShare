@@ -1,11 +1,11 @@
 {
-    "geode": "4.0.0-alpha.1",
+    "geode": "4.0.0-beta.1",
 	"gd": {
 		"android": "2.2074",
 		"win": "2.2074",
 		"mac": "2.2074"
 	},
-	"version": "1.4.0",
+	"version": "1.4.1",
 	"id": "hjfod.gdshare",
     "name": "GDShare",
     "developer": "HJfod",
@@ -20,7 +20,7 @@
     "dependencies": [
         {
             "id": "hjfod.gmd-api",
-            "version": "1.3.0",
+            "version": "1.4.0",
             "importance": "required"
         },
         {
