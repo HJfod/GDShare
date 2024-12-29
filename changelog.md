@@ -1,4 +1,7 @@
 
+## v1.4.2
+ * Add list (gmdl file) EXPORTING.
+
 ## v1.4.1
  * Update Geode version
 
