@@ -1,11 +1,11 @@
 {
-    "geode": "4.0.0-beta.1",
+    "geode": "4.0.1",
 	"gd": {
 		"android": "2.2074",
 		"win": "2.2074",
 		"mac": "2.2074"
 	},
-	"version": "1.4.1",
+	"version": "1.4.2",
 	"id": "hjfod.gdshare",
     "name": "GDShare",
     "developer": "HJfod",

@@ -243,7 +243,7 @@ struct $modify(ExportListLayer, LevelListLayer) {
         if (!LevelListLayer::init(level))
             return false;
         
-        if (auto menu = this->getChildByID("main-menu")) {
+        if (auto menu = this->getChildByID("left-side-menu")) {
             auto btn = CCMenuItemSpriteExtra::create(
                 CircleButtonSprite::createWithSpriteFrameName(
                     "file.png"_spr, .8f,
