@@ -3,7 +3,7 @@
  * Mac Support!
 
 ## v1.4.2
- * Exports lists button
+ * Exports lists (.gmdl) button
 
 ## v1.4.1
  * Update Geode version
