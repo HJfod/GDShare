@@ -1,6 +1,6 @@
 
 ## v1.5.0
- * Mac Support!
+ * Mac & iOS support!
 
 ## v1.4.2
  * Exports lists (.gmdl) button
@@ -27,3 +27,4 @@
 # v1.1.0
  * Add support for importing/exporting lists as `.gmdl` files
  * Allow importing multiple levels at once
+
