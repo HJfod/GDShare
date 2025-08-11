@@ -6,7 +6,7 @@
 		"mac": "2.2074",
 		"ios": "2.2074"
 	},
-	"version": "1.5.0",
+	"version": "1.5.1",
 	"id": "hjfod.gdshare",
     "name": "GDShare",
     "developer": "HJfod",
@@ -32,3 +32,4 @@
     ],
     "tags": ["utility", "universal"]
 }
+
