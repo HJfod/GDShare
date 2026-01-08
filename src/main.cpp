@@ -21,6 +21,16 @@ static auto IMPORT_PICK_OPTIONS = file::FilePickOptions {
     }
 };
 
+static auto EXPORT_FOLDER_OPTIONS = file::FilePickOptions {
+    std::nullopt,
+    {
+        {
+            "Folders",
+            { "" }
+        }
+    }
+};
+
 template <class L>
 static Task<Result<std::filesystem::path>> promptExportLevel(L* level) {
     auto opts = IMPORT_PICK_OPTIONS;
@@ -63,6 +73,60 @@ static void onExportFilePick(L* level, typename Task<Result<std::filesystem::pat
                     "Unable to export: " + err.value(),
                     "OK"
                 )->show();
+            }
+        }
+        else {
+            FLAlertLayer::create("Error Exporting", result->unwrapErr(), "OK")->show();
+        }
+    }
+}
+template <class L>
+static Task<Result<std::filesystem::path>> onExportFolderPick(std::vector<L*> levels) {
+    return file::pick(file::PickMode::OpenFolder, EXPORT_FOLDER_OPTIONS);
+}
+template <class L>
+static void exportMany(std::vector<L*> levels, typename Task<Result<std::filesystem::path>>::Event* event) {
+    if (auto result = event->getValue()) {
+        if (result->isOk()) {
+            auto path = result->unwrap();
+            std::vector<std::optional<std::string>> errs;
+            for (auto level : levels) {
+                std::optional<std::string> err;
+                if constexpr (std::is_same_v<L, GJLevelList>) {
+                    err = exportListAsGmd(level, path / (std::string(level->m_listName) + ".gmdl")).err();
+                }
+                else {
+                    err = exportLevelAsGmd(level, path / (std::string(level->m_levelName) + ".gmd")).err();
+                }
+                if (err) errs.push_back(err);
+            }
+            if (errs.empty()) {
+                createQuickPopup(
+                    "Exported",
+                    (std::is_same_v<L, GJLevelList> ?
+                        fmt::format("Succesfully exported {} list{}", levels.size(), levels.size() == 1 ? "s" : "") :
+                        fmt::format("Succesfully exported {} levels{}", levels.size(), levels.size() == 1 ? "s" : "") 
+                    ),
+                    "OK", "Open Folder",
+                    [path](auto, bool btn2) {
+                        if (btn2) file::openFolder(path);
+                    }
+                );
+            }
+            else {
+                auto successPortion = (std::is_same_v<L, GJLevelList> ?
+                    fmt::format("Succesfully exported {} list{}", levels.size() - errs.size(), levels.size() - errs.size() == 1 ? "s" : "") :
+                    fmt::format("Succesfully exported {} levels{}", levels.size() - errs.size(), levels.size() - errs.size() == 1 ? "s" : "") 
+                );
+                auto formattedErrsAndSuccess = fmt::format("Several errors occurred:\n- {}\n\n{}", fmt::join(errs, "\n- "), successPortion);
+                createQuickPopup(
+                    "Exported with Errors",
+                    formattedErrsAndSuccess,
+                    "OK", "Open Folder",
+                    [path](auto, bool btn2) {
+                        if (btn2) file::openFolder(path);
+                    }
+                );
             }
         }
         else {
@@ -142,6 +206,7 @@ struct $modify(ExportOnlineLevelLayer, LevelInfoLayer) {
 struct $modify(ImportLayer, LevelBrowserLayer) {
     struct Fields {
         EventListener<Task<Result<std::vector<std::filesystem::path>>>> pickListener;
+        EventListener<Task<Result<std::filesystem::path>>> exportListener;
     };
 
     static void importFiles(std::vector<std::filesystem::path> const& paths) {
@@ -200,6 +265,24 @@ struct $modify(ImportLayer, LevelBrowserLayer) {
         m_fields->pickListener.setFilter(file::pickMany(IMPORT_PICK_OPTIONS));
     }
 
+    void onExport(CCObject*) {
+        if (m_searchObject->m_searchType != SearchType::MyLevels) return;
+        size_t count = 0;
+        std::vector<GJGameLevel*> levelsForExporting = {};
+        for (auto level : CCArrayExt<GJGameLevel*>(m_levels)) {
+            if (!level->m_selected) continue;
+            count += 1;
+            levelsForExporting.push_back(level);
+        }
+        if (count < 1 || levelsForExporting.empty()) {
+            FLAlertLayer::create("Nothing here...", "No levels selected for export.", "OK")->show();
+        }
+        else {
+            m_fields->exportListener.bind([levelsForExporting](auto* ev) { exportMany(levelsForExporting, ev); });
+            m_fields->exportListener.setFilter(onExportFolderPick(levelsForExporting));
+        }
+    }
+
     $override
     bool init(GJSearchObject* search) {
         if (!LevelBrowserLayer::init(search))
@@ -226,6 +309,23 @@ struct $modify(ImportLayer, LevelBrowserLayer) {
             else {
                 btnMenu->addChild(importBtn);
                 btnMenu->updateLayout();
+            }
+
+            auto otherBtnMenu = this->getChildByID("my-levels-menu");
+
+            if (otherBtnMenu && search->m_searchType == SearchType::MyLevels && !search->m_searchIsOverlay) {
+                auto exportBtn = CCMenuItemSpriteExtra::create(
+                    CircleButtonSprite::createWithSpriteFrameName(
+                        "file.png"_spr, .85f,
+                        CircleBaseColor::Cyan,
+                        CircleBaseSize::Big
+                    ),
+                    this,
+                    menu_selector(ImportLayer::onExport)
+                );
+                exportBtn->setID("export-level-button"_spr);
+                otherBtnMenu->addChild(exportBtn);
+                otherBtnMenu->updateLayout();
             }
         }
 
