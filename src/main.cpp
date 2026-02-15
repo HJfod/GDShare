@@ -16,7 +16,7 @@ static auto IMPORT_PICK_OPTIONS = file::FilePickOptions {
     {
         {
             "GD Level Files",
-            { "*.gmd", "*.gmdl" }
+            { "*.gmd", "*.gmdl", "*.gmd2", "*.lvl" } // importing gmd2 and lvl files work (also pls thank me (fijiaura) in the changelog)
         }
     }
 };
@@ -365,3 +365,4 @@ struct $modify(ExportListLayer, LevelListLayer) {
         m_fields->pickListener.setFilter(promptExportLevel(m_levelList));
     }
 };
+
