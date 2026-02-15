@@ -88,7 +88,7 @@ static void exportMany(std::vector<L*> levels, file::PickResult result) {
         if (!optPath) return;
         auto path = std::move(*optPath);
         
-        std::vector<std::optional<std::string>> errs;
+        std::vector<std::string> errs;
         for (auto level : levels) {
             std::optional<std::string> err;
             if constexpr (std::is_same_v<L, GJLevelList>) {
@@ -97,15 +97,20 @@ static void exportMany(std::vector<L*> levels, file::PickResult result) {
             else {
                 err = exportLevelAsGmd(level, path / (std::string(level->m_levelName) + ".gmd")).err();
             }
-            if (err) errs.push_back(err);
+            if (err) errs.push_back(*err);
         }
+
+        size_t successCount = levels.size() - errs.size();
+        auto successPortion = fmt::format(
+            "Succesfully exported {} {}{}",
+            successCount,
+            (std::is_same_v<L, GJLevelList> ? "list" : "level"),
+            successCount == 1 ? "" : "s"
+        );
         if (errs.empty()) {
             createQuickPopup(
                 "Exported",
-                (std::is_same_v<L, GJLevelList> ?
-                    fmt::format("Succesfully exported {} list{}", levels.size(), levels.size() == 1 ? "s" : "") :
-                    fmt::format("Succesfully exported {} levels{}", levels.size(), levels.size() == 1 ? "s" : "") 
-                ),
+                successPortion,
                 "OK", "Open Folder",
                 [path](auto, bool btn2) {
                     if (btn2) file::openFolder(path);
@@ -113,10 +118,6 @@ static void exportMany(std::vector<L*> levels, file::PickResult result) {
             );
         }
         else {
-            auto successPortion = (std::is_same_v<L, GJLevelList> ?
-                fmt::format("Succesfully exported {} list{}", levels.size() - errs.size(), levels.size() - errs.size() == 1 ? "s" : "") :
-                fmt::format("Succesfully exported {} levels{}", levels.size() - errs.size(), levels.size() - errs.size() == 1 ? "s" : "") 
-            );
             auto formattedErrsAndSuccess = fmt::format("Several errors occurred:\n- {}\n\n{}", fmt::join(errs, "\n- "), successPortion);
             createQuickPopup(
                 "Exported with Errors",
