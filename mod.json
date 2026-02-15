@@ -1,5 +1,5 @@
 {
-    "geode": "4.7.0",
+    "geode": "4.10.0",
 	"gd": {
 		"android": "2.2074",
 		"win": "2.2074",
@@ -18,18 +18,10 @@
             ]
         }
     },
-    "dependencies": [
-        {
-            "id": "hjfod.gmd-api",
-            "version": "1.4.0",
-            "importance": "required"
-        },
-        {
-            "id": "geode.node-ids",
-            "version": "1.12.0",
-            "importance": "required"
-        }
-    ],
+    "dependencies": {
+        "hjfod.gmd-api": "1.4.0",
+        "geode.node-ids": "1.12.0"
+    },
     "tags": ["utility", "universal"]
 }
 
