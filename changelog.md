@@ -1,4 +1,9 @@
 
+## v1.6.0
+ * Allow exporting multiple levels, thanks to @RayDeeUx
+ * Allow importing old formats, thanks to @FijiAura
+ * Support for 2.2081
+
 ## v1.5.0
  * Mac & iOS support!
 

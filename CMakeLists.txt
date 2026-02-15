@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21.0)
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "iOS" OR IOS)
 	set(CMAKE_OSX_ARCHITECTURES "arm64")
@@ -25,4 +25,4 @@ endif()
 add_subdirectory($ENV{GEODE_SDK} ${CMAKE_CURRENT_BINARY_DIR}/geode)
 
 target_link_libraries(${PROJECT_NAME} geode-sdk)
-setup_geode_mod(${PROJECT_NAME} EXTERNALS geode.node-ids:1.12.0)
+setup_geode_mod(${PROJECT_NAME} EXTERNALS geode.node-ids:1.22.0)

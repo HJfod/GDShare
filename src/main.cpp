@@ -6,6 +6,7 @@
 #include <Geode/modify/IDManager.hpp>
 #include <Geode/modify/LevelListLayer.hpp>
 #include <Geode/ui/Popup.hpp>
+#include <Geode/utils/async.hpp>
 #include <hjfod.gmd-api/include/GMD.hpp>
 
 using namespace geode::prelude;
@@ -22,7 +23,7 @@ static auto IMPORT_PICK_OPTIONS = file::FilePickOptions {
 };
 
 template <class L>
-static Task<Result<std::filesystem::path>> promptExportLevel(L* level) {
+static arc::Future<file::PickResult> promptExportLevel(L* level) {
     auto opts = IMPORT_PICK_OPTIONS;
     if constexpr (std::is_same_v<L, GJLevelList>) {
         opts.defaultPath = std::string(level->m_listName) + ".gmdl";
@@ -33,47 +34,46 @@ static Task<Result<std::filesystem::path>> promptExportLevel(L* level) {
     return file::pick(file::PickMode::SaveFile, opts);
 }
 template <class L>
-static void onExportFilePick(L* level, typename Task<Result<std::filesystem::path>>::Event* event) {
-    if (auto result = event->getValue()) {
-        if (result->isOk()) {
-            auto path = result->unwrap();
-            std::optional<std::string> err;
-            if constexpr (std::is_same_v<L, GJLevelList>) {
-                err = exportListAsGmd(level, path).err();
-            }
-            else {
-                err = exportLevelAsGmd(level, path).err();
-            }
-            if (!err) {
-                createQuickPopup(
-                    "Exported",
-                    (std::is_same_v<L, GJLevelList> ?
-                        "Succesfully exported list" :
-                        "Succesfully exported level"
-                    ),
-                    "OK", "Open File",
-                    [path](auto, bool btn2) {
-                        if (btn2) file::openFolder(path);
-                    }
-                );
-            }
-            else {
-                FLAlertLayer::create(
-                    "Error",
-                    "Unable to export: " + err.value(),
-                    "OK"
-                )->show();
-            }
+static void onExportFilePick(L* level, file::PickResult result) {
+    if (result.isOk()) {
+        auto path = std::move(result).unwrap();
+        if (!path) return;
+        std::optional<std::string> err;
+        if constexpr (std::is_same_v<L, GJLevelList>) {
+            err = exportListAsGmd(level, *path).err();
         }
         else {
-            FLAlertLayer::create("Error Exporting", result->unwrapErr(), "OK")->show();
+            err = exportLevelAsGmd(level, *path).err();
         }
+        if (!err) {
+            createQuickPopup(
+                "Exported",
+                (std::is_same_v<L, GJLevelList> ?
+                    "Succesfully exported list" :
+                    "Succesfully exported level"
+                ),
+                "OK", "Open File",
+                [path](auto, bool btn2) {
+                    if (btn2) file::openFolder(*path);
+                }
+            );
+        }
+        else {
+            FLAlertLayer::create(
+                "Error",
+                "Unable to export: " + err.value(),
+                "OK"
+            )->show();
+        }
+    }
+    else {
+        FLAlertLayer::create("Error Exporting", result.unwrapErr(), "OK")->show();
     }
 }
 
 struct $modify(ExportMyLevelLayer, EditLevelLayer) {
     struct Fields {
-        EventListener<Task<Result<std::filesystem::path>>> pickListener;
+        async::TaskHolder<file::PickResult> pickListener;
     };
 
     $override
@@ -100,14 +100,18 @@ struct $modify(ExportMyLevelLayer, EditLevelLayer) {
     }
 
     void onExport(CCObject*) {
-        m_fields->pickListener.bind([level = m_level](auto* ev) { onExportFilePick(level, ev); });
-        m_fields->pickListener.setFilter(promptExportLevel(m_level));
+        m_fields->pickListener.spawn(
+            promptExportLevel(m_level),
+            [level = m_level](file::PickResult ev) {
+                onExportFilePick(level, std::move(ev));
+            }
+        );
     }
 };
 
 struct $modify(ExportOnlineLevelLayer, LevelInfoLayer) {
     struct Fields {
-        EventListener<Task<Result<std::filesystem::path>>> pickListener;
+        async::TaskHolder<file::PickResult> pickListener;
     };
 
     $override
@@ -134,14 +138,18 @@ struct $modify(ExportOnlineLevelLayer, LevelInfoLayer) {
     }
 
     void onExport(CCObject*) {
-        m_fields->pickListener.bind([level = m_level](auto* ev) { onExportFilePick(level, ev); });
-        m_fields->pickListener.setFilter(promptExportLevel(m_level));
+        m_fields->pickListener.spawn(
+            promptExportLevel(m_level),
+            [level = m_level](file::PickResult ev) {
+                onExportFilePick(level, std::move(ev));
+            }
+        );
     }
 };
 
 struct $modify(ImportLayer, LevelBrowserLayer) {
     struct Fields {
-        EventListener<Task<Result<std::vector<std::filesystem::path>>>> pickListener;
+        async::TaskHolder<file::PickManyResult> pickListener;
     };
 
     static void importFiles(std::vector<std::filesystem::path> const& paths) {
@@ -187,17 +195,17 @@ struct $modify(ImportLayer, LevelBrowserLayer) {
     }
 
     void onImport(CCObject*) {
-        m_fields->pickListener.bind([](auto* event) {
-            if (auto result = event->getValue()) {
-                if (result->isOk()) {
-                    importFiles(**result);
+        m_fields->pickListener.spawn(
+            file::pickMany(IMPORT_PICK_OPTIONS),
+            [](file::PickManyResult result) {
+                if (result.isOk()) {
+                    importFiles(std::move(result).unwrap());
                 }
                 else {
-                    FLAlertLayer::create("Error Importing", result->unwrapErr(), "OK")->show();
+                    FLAlertLayer::create("Error Importing", result.unwrapErr(), "OK")->show();
                 }
             }
-        });
-        m_fields->pickListener.setFilter(file::pickMany(IMPORT_PICK_OPTIONS));
+        );
     }
 
     $override
@@ -235,7 +243,7 @@ struct $modify(ImportLayer, LevelBrowserLayer) {
 
 struct $modify(ExportListLayer, LevelListLayer) {
     struct Fields {
-        EventListener<Task<Result<std::filesystem::path>>> pickListener;
+        async::TaskHolder<file::PickResult> pickListener;
     };
 
     $override
@@ -261,7 +269,11 @@ struct $modify(ExportListLayer, LevelListLayer) {
     }
 
     void onExport(CCObject*) {
-        m_fields->pickListener.bind([list = m_levelList](auto* ev) { onExportFilePick(list, ev); });
-        m_fields->pickListener.setFilter(promptExportLevel(m_levelList));
+        m_fields->pickListener.spawn(
+            promptExportLevel(m_levelList),
+            [list = m_levelList](file::PickResult ev) {
+                onExportFilePick(list, std::move(ev));
+            }
+        );
     }
 };
